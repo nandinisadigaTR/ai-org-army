@@ -1,0 +1,106 @@
+{
+  "roles": {
+    "ceo": {
+      "title": "CEO Strategist",
+      "mode": "scout",
+      "tier": "strategic",
+      "model_priority": ["ai-platform-opus-5", "ai-platform-gpt-5-6-sol", "litellm-opus-5"],
+      "triggers": ["plan", "strategy", "evaluate", "should we", "vision", "goal", "direction"]
+    },
+    "cto": {
+      "title": "CTO Architect",
+      "mode": "scout",
+      "tier": "strategic",
+      "model_priority": ["ai-platform-gpt-5-6-sol", "ai-platform-opus-5", "litellm-gpt-5-6-sol"],
+      "triggers": ["architecture", "tech stack", "build", "system design", "infrastructure", "scale"]
+    },
+    "cfo": {
+      "title": "CFO Analyst",
+      "mode": "scout",
+      "tier": "strategic",
+      "model_priority": ["ai-platform-sonnet-5", "ai-platform-gpt-5-6-terra", "litellm-sonnet-5"],
+      "triggers": ["budget", "cost", "pricing", "revenue", "financial", "ROI", "unit economics"]
+    },
+    "vp_engineering": {
+      "title": "VP Engineering",
+      "mode": "scout",
+      "tier": "management",
+      "model_priority": ["ai-platform-sonnet-5", "ai-platform-gpt-5-6-terra", "litellm-sonnet-5"],
+      "triggers": ["sprint", "tasks", "breakdown", "implement", "build", "code"]
+    },
+    "vp_product": {
+      "title": "VP Product",
+      "mode": "scout",
+      "tier": "management",
+      "model_priority": ["ai-platform-gpt-5-6-luna", "ai-platform-sonnet-4-6", "litellm-sonnet-5"],
+      "triggers": ["features", "users", "product", "requirements", "specs", "UX"]
+    },
+    "vp_sales_marketing": {
+      "title": "VP Sales & Marketing",
+      "mode": "scout",
+      "tier": "management",
+      "model_priority": ["ai-platform-gpt-5-6-luna", "ai-platform-sonnet-5", "litellm-gpt-5-6-luna"],
+      "triggers": ["launch", "go-to-market", "GTM", "marketing", "growth", "acquisition", "sales"]
+    },
+    "senior_developer": {
+      "title": "Senior Developer",
+      "mode": "worker",
+      "tier": "execution",
+      "model_priority": ["ai-platform-sonnet-5", "ai-platform-gpt-5-6-terra", "litellm-sonnet-5"],
+      "triggers": ["code", "implement", "build", "develop", "create"]
+    },
+    "qa_engineer": {
+      "title": "QA Engineer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["ai-platform-sonnet-4-6", "ai-platform-gpt-5-6-terra", "litellm-sonnet-4-6"],
+      "triggers": ["test", "quality", "review", "bugs", "edge cases"]
+    },
+    "security_engineer": {
+      "title": "Security Engineer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["ai-platform-opus-5", "ai-platform-sonnet-5", "litellm-opus-5"],
+      "triggers": ["security", "auth", "vulnerability", "threat", "OWASP", "audit", "compliance"]
+    },
+    "research_analyst": {
+      "title": "Research Analyst",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["ai-platform-gemini-2-5-pro", "ai-platform-sonnet-5", "litellm-gemini-3-1"],
+      "triggers": ["research", "compare", "analyze", "investigate", "benchmark", "data"]
+    }
+  },
+  "task_patterns": {
+    "planning": {
+      "keywords": ["plan", "strategy", "evaluate", "should we", "assess", "roadmap"],
+      "default_roles": ["ceo", "cto", "vp_product"],
+      "optional_roles": ["cfo"]
+    },
+    "build": {
+      "keywords": ["build", "code", "implement", "create app", "develop", "scaffold"],
+      "default_roles": ["cto", "vp_engineering", "senior_developer", "qa_engineer"],
+      "optional_roles": ["security_engineer"]
+    },
+    "research": {
+      "keywords": ["research", "compare", "analyze", "investigate", "explore", "benchmark"],
+      "default_roles": ["ceo", "research_analyst", "vp_product"],
+      "optional_roles": []
+    },
+    "gtm": {
+      "keywords": ["launch", "go-to-market", "GTM", "marketing", "growth", "sell"],
+      "default_roles": ["ceo", "vp_sales_marketing", "cfo", "research_analyst"],
+      "optional_roles": []
+    },
+    "security": {
+      "keywords": ["security", "audit", "vulnerability", "threat model", "pen test"],
+      "default_roles": ["cto", "security_engineer", "qa_engineer"],
+      "optional_roles": []
+    },
+    "full_org": {
+      "keywords": ["full org", "army mode", "everything", "all roles", "complete"],
+      "default_roles": ["ceo", "cto", "vp_engineering", "vp_product", "senior_developer", "qa_engineer", "research_analyst"],
+      "optional_roles": ["cfo", "vp_sales_marketing", "security_engineer"]
+    }
+  }
+}
