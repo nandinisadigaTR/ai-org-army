@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Org Army — Test Run Results</title>
+<style>
+:root{--bg:#0a0a0f;--s1:#12121a;--s2:#1a1a26;--b:#2a2a3a;--ac:#6c5ce7;--ac2:#a855f7;--cy:#06b6d4;--gn:#10b981;--or:#f59e0b;--rd:#ef4444;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--font:'Segoe UI',system-ui,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);line-height:1.6}
+.hero{padding:48px 24px;text-align:center;background:linear-gradient(135deg,#0a0a1a,#1a0a2e,#0a1a2e);border-bottom:1px solid var(--b)}
+.hero h1{font-size:2.4rem;font-weight:800;background:linear-gradient(135deg,#6c5ce7,#a855f7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hero p{color:var(--t2);max-width:600px;margin:0 auto}
+.hero .meta{display:flex;gap:16px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.hero .meta span{padding:4px 14px;border-radius:16px;font-size:.75rem;font-weight:600;letter-spacing:.5px}
+.badge-green{background:rgba(16,185,129,.12);color:var(--gn)}
+.badge-blue{background:rgba(6,182,212,.12);color:var(--cy)}
+.badge-purple{background:rgba(108,92,231,.12);color:var(--ac)}
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+.tabs{display:flex;gap:4px;padding:20px 0 0;flex-wrap:wrap;border-bottom:1px solid var(--b);position:sticky;top:0;background:var(--bg);z-index:10}
+.tab{padding:10px 20px;border:none;background:none;color:var(--t3);font-size:.85rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab:hover{color:var(--t1)}
+.tab.active{color:var(--cy);border-bottom-color:var(--cy)}
+.panel{display:none;padding:32px 0}
+.panel.active{display:block}
+.card{background:var(--s1);border:1px solid var(--b);border-radius:12px;padding:24px;margin-bottom:16px;transition:border-color .2s}
+.card:hover{border-color:var(--ac)}
+.card h3{font-size:1.1rem;margin-bottom:12px}
+.card h4{font-size:.95rem;color:var(--cy);margin:16px 0 8px}
+.label{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.85rem}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid rgba(42,42,58,.5)}
+th{color:var(--t3);font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.check{color:var(--gn);font-weight:700}
+.warn{color:var(--or)}
+.crit{color:var(--rd)}
+code{background:var(--s2);padding:2px 6px;border-radius:4px;font-size:.8rem;color:var(--cy);font-family:'Cascadia Code','Fira Code',monospace}
+pre{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:16px;overflow-x:auto;font-size:.78rem;line-height:1.8;font-family:'Cascadia Code','Fira Code',monospace;color:var(--t2);margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.stat{text-align:center;padding:20px}
+.stat .num{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--ac),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat .desc{font-size:.8rem;color:var(--t3);margin-top:4px}
+.flow{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin:20px 0}
+.flow-n{background:var(--s1);border:1px solid var(--b);border-radius:10px;padding:12px 16px;text-align:center;min-width:120px}
+.flow-n .ico{font-size:1.3rem;margin-bottom:4px}
+.flow-n .ttl{font-size:.8rem;font-weight:700}
+.flow-n .sub{font-size:.68rem;color:var(--t3)}
+.flow-a{color:var(--t3);padding:0 6px;font-size:1rem}
+.timeline{position:relative;padding-left:32px;margin:16px 0}
+.timeline::before{content:'';position:absolute;left:12px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--ac),var(--cy),var(--gn))}
+.tl-item{position:relative;margin-bottom:24px}
+.tl-item::before{content:'';position:absolute;left:-26px;top:6px;width:10px;height:10px;border-radius:50%;border:2px solid var(--ac);background:var(--bg)}
+.tl-item h4{font-size:.9rem;font-weight:700;margin-bottom:2px}
+.tl-item .time{font-size:.7rem;color:var(--cy);font-weight:600}
+.tl-item p{font-size:.82rem;color:var(--t2)}
+.debate{border-left:3px solid var(--or);padding-left:16px;margin:12px 0}
+.debate .from{font-size:.7rem;font-weight:700;color:var(--or);text-transform:uppercase;letter-spacing:1px}
+.debate p{font-size:.82rem;color:var(--t2);margin-top:4px}
+.resolved{border-left-color:var(--gn)}
+.resolved .from{color:var(--gn)}
+.acc{border:1px solid var(--b);border-radius:8px;margin:8px 0;overflow:hidden}
+.acc-h{padding:12px 16px;background:var(--s2);cursor:pointer;font-size:.85rem;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.acc-h:hover{background:rgba(42,42,58,.8)}
+.acc-h::after{content:'▸';transition:transform .2s}
+.acc-h.open::after{transform:rotate(90deg)}
+.acc-b{display:none;padding:16px;font-size:.82rem;color:var(--t2)}
+.acc-b.open{display:block}
+.cost-bar{display:flex;align-items:center;gap:12px;margin:8px 0}
+.cost-bar .bar{flex:1;height:24px;background:var(--s2);border-radius:6px;overflow:hidden;position:relative}
+.cost-bar .fill{height:100%;border-radius:6px;transition:width .5s}
+.cost-bar .lbl{font-size:.75rem;color:var(--t3);min-width:100px}
+.cost-bar .val{font-size:.8rem;font-weight:700;min-width:80px;text-align:right}
+@media(max-width:768px){.hero h1{font-size:1.6rem}.tabs{overflow-x:auto}.flow{flex-direction:column}.flow-a{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+<h1>AI-Org Army — Test Run Dashboard</h1>
+<p>Real-time WebSocket Notification Service — planned by 5 AI agents with cross-agent coordination</p>
+<div class="meta">
+<span class="badge-green">✓ All 5 Agents Complete</span>
+<span class="badge-blue">5 Roles: CTO · VP Eng · Dev · QA · DevOps</span>
+<span class="badge-purple">4 Debates Resolved</span>
+</div>
+</div>
+
+<div class="container">
+<div class="tabs" id="tabs">
+<button class="tab active" onclick="show('overview')">Overview</button>
+<button class="tab" onclick="show('arch')">Architecture</button>
+<button class="tab" onclick="show('decisions')">Decisions & Debates</button>
+<button class="tab" onclick="show('code')">Code Design</button>
+<button class="tab" onclick="show('sprint')">Sprint Plan</button>
+<button class="tab" onclick="show('qa')">QA & Testing</button>
+<button class="tab" onclick="show('infra')">Infrastructure</button>
+<button class="tab" onclick="show('cost')">Cost Estimate</button>
+</div>
+
+<!-- OVERVIEW -->
+<div class="panel active" id="overview">
+<div class="grid" style="margin-bottom:24px">
+<div class="card stat"><div class="num">5</div><div class="desc">Agents Deployed</div></div>
+<div class="card stat"><div class="num">4</div><div class="desc">Debates Resolved</div></div>
+<div class="card stat"><div class="num">31</div><div class="desc">Tasks Planned</div></div>
+<div class="card stat"><div class="num">18</div><div class="desc">Test Cases</div></div>
+<div class="card stat"><div class="num">8</div><div class="desc">Sprints to Ship</div></div>
+<div class="card stat"><div class="num">$668</div><div class="desc">MVP Cost/mo</div></div>
+</div>
+<div class="card">
+<h3>Final Stack (Consensus)</h3>
+<table>
+<tr><th>Layer</th><th>Technology</th><th>Decided By</th></tr>
+<tr><td>Language</td><td><code>Node.js 22 LTS + TypeScript</code></td><td>CTO</td></tr>
+<tr><td>WS Library</td><td><code>ws</code> (not Socket.IO — 45K vs 27K msg/s)</td><td>CTO</td></tr>
+<tr><td>HTTP</td><td><code>Fastify</code></td><td>Senior Dev</td></tr>
+<tr><td>Durable Messaging</td><td><code>Redis Streams</code> (MVP) → NATS JetStream (V2)</td><td>CTO (revised after debate)</td></tr>
+<tr><td>Ephemeral Fan-out</td><td><code>Redis Pub/Sub</code></td><td>CTO</td></tr>
+<tr><td>Database</td><td><code>PostgreSQL 16</code> (RDS Multi-AZ)</td><td>CTO</td></tr>
+<tr><td>Connection State</td><td><code>Redis</code> with TTLs</td><td>CTO</td></tr>
+<tr><td>Load Balancer</td><td><code>ALB</code> (least outstanding requests)</td><td>CTO (revised after DevOps pushback)</td></tr>
+<tr><td>Compute</td><td><code>EKS</code> + r7g.large (Graviton3)</td><td>DevOps</td></tr>
+<tr><td>Cache</td><td><code>ElastiCache Valkey</code> Multi-AZ</td><td>DevOps</td></tr>
+<tr><td>CI/CD</td><td><code>GitHub Actions → ArgoCD → Argo Rollouts</code></td><td>DevOps</td></tr>
+<tr><td>Monitoring</td><td><code>Prometheus + Grafana</code> (8 custom metrics)</td><td>CTO + DevOps</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="panel" id="arch">
+<div class="card">
+<h3>Architecture Pattern</h3>
+<p style="color:var(--t2);margin-bottom:16px">Stateful Gateway + Stateless API, event-driven fan-out — following Discord/Slack's proven pattern.</p>
+<div class="flow">
+<div class="flow-n"><div class="ico">📱</div><div class="ttl">Client</div><div class="sub">Browser / Mobile</div></div>
+<div class="flow-a">→</div>
+<div class="flow-n"><div class="ico">⚖️</div><div class="ttl">ALB</div><div class="sub">Least Outstanding Req + WAF</div></div>
+<div class="flow-a">→</div>
+<div class="flow-n"><div class="ico">🔌</div><div class="ttl">WS Gateway</div><div class="sub">Stateful · ws · Heartbeat</div></div>
+<div class="flow-a">↔</div>
+<div class="flow-n"><div class="ico">🔴</div><div class="ttl">Redis</div><div class="sub">Pub/Sub + Streams + State</div></div>
+<div class="flow-a">↔</div>
+<div class="flow-n"><div class="ico">🔔</div><div class="ttl">Notification API</div><div class="sub">Stateless · Fastify · REST</div></div>
+<div class="flow-a">→</div>
+<div class="flow-n"><div class="ico">🐘</div><div class="ttl">PostgreSQL</div><div class="sub">Notifications · Subs · DLQ</div></div>
+</div>
+</div>
+<div class="card">
+<h3>Message Flow</h3>
+<pre>Producer → POST /notify → Notification API
+  → Write to PostgreSQL (notification_id + seq)
+  → XADD to Redis Stream notifications:{userId}
+  → Delivery Worker XREADGROUP
+  → Check revocation set
+  → If online: PUBLISH to Redis Pub/Sub → Gateway fans out to local WS
+  → Client receives {notification_id, seq, payload}
+  → Client sends {type: "ack", seq: N}
+  → Gateway XACKs stream entry
+
+Offline path:
+  → No connection in registry → stays in Stream unacked
+  → On reconnect: client sends last_seq → XRANGE replay</pre>
+</div>
+<div class="card">
+<h3>Data Model (6 Tables)</h3>
+<table>
+<tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr>
+<tr><td><code>notifications</code></td><td>Core notification record</td><td>id, seq (BIGSERIAL), user_id, type, status, priority, data (JSONB)</td></tr>
+<tr><td><code>channels</code></td><td>Topic/project/team rooms</td><td>id, name, type, metadata</td></tr>
+<tr><td><code>subscriptions</code></td><td>User → channel mapping</td><td>user_id, channel_id, muted</td></tr>
+<tr><td><code>delivery_log</code></td><td>Per-channel delivery tracking</td><td>notification_id, delivery_channel, status, attempt</td></tr>
+<tr><td><code>user_preferences</code></td><td>Notification settings</td><td>enabled_channels, quiet_hours, max_per_hour</td></tr>
+<tr><td><code>delivery_dlq</code></td><td>Dead letter queue</td><td>notification_id, payload, failure_reason, attempts</td></tr>
+</table>
+</div>
+</div>
+
+<!-- DECISIONS -->
+<div class="panel" id="decisions">
+<div class="card">
+<h3>Cross-Agent Debates (What Makes ai-org Valuable)</h3>
+<p style="color:var(--t2);margin-bottom:20px">These are architecture decisions that emerged from agents challenging each other — not from a single perspective.</p>
+
+<div class="debate">
+<div class="from">Debate 1: NATS JetStream vs Redis Streams</div>
+<p><strong>CTO:</strong> Initially specified NATS JetStream for durable messaging.</p>
+<p><strong>Parent (me):</strong> Provided 2026 benchmark data — Redis Streams is simpler (one fewer dependency, 480K msg/s, you already run Redis).</p>
+<p><strong>QA:</strong> Caught the divergence when Senior Dev's code used Redis Streams but CTO specified NATS.</p>
+</div>
+<div class="debate resolved">
+<div class="from">✓ Resolved: Redis Streams for MVP, NATS JetStream V2</div>
+<p>CTO accepted. Senior Dev designed <code>IMessageBroker</code> abstraction so the swap is one adapter change. DLQ handling stays inside the adapter impl.</p>
+</div>
+
+<div class="debate" style="margin-top:24px">
+<div class="from">Debate 2: ALB vs NLB</div>
+<p><strong>CTO:</strong> Specified NLB (L4, least-connections) — better connection distribution for long-lived WS.</p>
+<p><strong>DevOps:</strong> Pushed back — ALB gives L7 health checks (catches deadlocked gateways), WAF integration, native K8s Ingress. NLB only at 200K+.</p>
+</div>
+<div class="debate resolved">
+<div class="from">✓ Resolved: ALB with "least outstanding requests"</div>
+<p>CTO revised after DevOps's evidence. ALB's <code>least_outstanding_requests</code> routing algorithm compensates for connection skew. Crossover to NLB at 200K-500K connections.</p>
+</div>
+
+<div class="debate" style="margin-top:24px">
+<div class="from">Debate 3: JWT Mid-Session Expiry</div>
+<p><strong>QA:</strong> Flagged as security gap — JWT validated only at handshake means revoked users keep receiving notifications.</p>
+<p><strong>CTO:</strong> Identified as pre-ship blocker.</p>
+</div>
+<div class="debate resolved">
+<div class="from">✓ Resolved: Dual mechanism — timer + in-band refresh</div>
+<p>Senior Dev designed: server-side timer (60s warning → hard disconnect at expiry), in-band token refresh over WS, Redis revocation set checked per delivery. Token swap attack prevented by validating <code>sub</code> claim matches.</p>
+</div>
+
+<div class="debate" style="margin-top:24px">
+<div class="from">Debate 4: Backpressure / Slow Consumer</div>
+<p><strong>QA:</strong> Flagged as OOM risk — what happens when a client can't read fast enough?</p>
+</div>
+<div class="debate resolved">
+<div class="from">✓ Resolved: Buffer → Drop → Disconnect</div>
+<p>100-message per-connection queue cap. Drop current message on overflow (don't reorder). 3 consecutive strikes → <code>ws.close(4008, "slow_consumer")</code>. Safe because Redis Streams replays on reconnect.</p>
+</div>
+</div>
+</div>
+
+<!-- CODE -->
+<div class="panel" id="code">
+<div class="card">
+<h3>Project Structure</h3>
+<pre>src/
+  gateway/
+    ws-server.ts            # WebSocketServer setup, upgrade handling
+    connection-registry.ts  # In-memory Map&lt;userId, Set&lt;WebSocket&gt;&gt;
+    heartbeat.ts            # Ping/pong 30s interval, 10s timeout
+    auth.ts                 # JWT at upgrade + in-band refresh + revocation
+    graceful-shutdown.ts    # K8s preStop: drain + WS close 1012
+  broker/
+    broker.interface.ts     # IMessageBroker — V2 NATS swap path
+    redis-streams.broker.ts # MVP: XADD, XREADGROUP, XACK, XPENDING
+    redis-pubsub.broker.ts  # Ephemeral fan-out
+    dlq.worker.ts           # XPENDING claim → Postgres DLQ
+  api/
+    notifications.router.ts # Fastify: send/list/read/subscribe
+    notifications.schema.ts # Zod validation
+  services/
+    notification.service.ts # Validate → persist → publish
+    delivery.service.ts     # Stream consumer → WS delivery → ack
+    offline-queue.service.ts# Reconnect replay via XRANGE
+  models/
+    notification.ts
+    subscription.ts
+  config/env.ts
+  workers/delivery-worker.ts
+  index.ts</pre>
+</div>
+<div class="card">
+<h3>IMessageBroker Interface (V2 Migration Path)</h3>
+<pre>interface IMessageBroker {
+  publish(subject: string, payload: NotificationPayload): Promise&lt;void&gt;
+  consumeFrom(subject: string, group: string, lastSeq: string,
+    handler: (msg: BrokerMessage) =&gt; Promise&lt;void&gt;): Promise&lt;void&gt;
+  ack(subject: string, group: string, msgId: string): Promise&lt;void&gt;
+  close(): Promise&lt;void&gt;
+}
+
+// MVP:  RedisStreamsBroker  implements IMessageBroker
+// V2:   NATSJetStreamBroker implements IMessageBroker
+// DLQ handling inside adapter impl, not the interface</pre>
+</div>
+<div class="card">
+<h3>REST API Endpoints</h3>
+<table>
+<tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr>
+<tr><td><code>POST</code></td><td>/v1/notifications</td><td>Send notification → 202 Accepted</td></tr>
+<tr><td><code>GET</code></td><td>/v1/notifications?userId=&status=&cursor=</td><td>List with pagination</td></tr>
+<tr><td><code>PATCH</code></td><td>/v1/notifications/:id/read</td><td>Mark single as read</td></tr>
+<tr><td><code>PATCH</code></td><td>/v1/notifications/read-all</td><td>Mark all as read</td></tr>
+<tr><td><code>POST</code></td><td>/v1/subscriptions</td><td>Subscribe to channel</td></tr>
+<tr><td><code>DELETE</code></td><td>/v1/subscriptions/:id</td><td>Unsubscribe</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Custom WS Close Codes</h3>
+<table>
+<tr><th>Code</th><th>Meaning</th><th>Client Action</th></tr>
+<tr><td><code>1012</code></td><td>Service Restart (deploy)</td><td>Reconnect with jittered backoff</td></tr>
+<tr><td><code>4001</code></td><td>Token Expired / Revoked</td><td>Refresh token, then reconnect</td></tr>
+<tr><td><code>4003</code></td><td>Token Refresh Rejected / Sub Mismatch</td><td>Full re-auth flow</td></tr>
+<tr><td><code>4008</code></td><td>Slow Consumer (3 strikes)</td><td>Reconnect, send lastSeq for replay</td></tr>
+<tr><td><code>1009</code></td><td>Message Too Big (&gt;64KB)</td><td>Fix payload size</td></tr>
+</table>
+</div>
+</div>
+
+<!-- SPRINT -->
+<div class="panel" id="sprint">
+<div class="card">
+<h3>4-Sprint Execution Plan (8 weeks)</h3>
+<div class="timeline">
+<div class="tl-item">
+<div class="time">Sprint 1 — Weeks 1-2</div>
+<h4>Foundations</h4>
+<p>Repo scaffolding · Terraform (VPC, EKS, networking) · Redis + Postgres provisioning · ALB config with least_outstanding_requests · CI pipeline (lint/test/build/push) · WS gateway skeleton + auth · Notification API stub</p>
+</div>
+<div class="tl-item">
+<div class="time">Sprint 2 — Weeks 3-4</div>
+<h4>Core Functionality</h4>
+<p>Heartbeat/ping-pong · Reconnection + jittered backoff · Redis Streams durable delivery · Offline replay · Message dedup · Backpressure (100-msg cap, 3-strike disconnect) · Graceful shutdown (preStop + 1012) · Unit tests · Start metrics instrumentation</p>
+</div>
+<div class="tl-item">
+<div class="time">Sprint 3 — Weeks 5-6</div>
+<h4>Pipeline + Observability</h4>
+<p>Integration tests · Load test harness (k6: 10K→100K) · ArgoCD canary deploys · Staging env parity · Prometheus + Grafana dashboards · 10 alert rules · Distributed tracing</p>
+</div>
+<div class="tl-item">
+<div class="time">Sprint 4 — Weeks 7-8</div>
+<h4>Hardening + Launch</h4>
+<p>Chaos testing (pod kill, Redis failover, connection storms) · Security review (Origin, rate limiting, 64KB cap) · Runbooks (4 incident procedures) · Production rollout with feature flags + rollback plan</p>
+</div>
+</div>
+</div>
+<div class="card">
+<h3>Task Summary: 31 Tasks</h3>
+<table>
+<tr><th>Phase</th><th>Tasks</th><th>Sizes</th></tr>
+<tr><td>Foundation (Sprint 1)</td><td>8 tasks</td><td>1S, 3M, 2L, 2M</td></tr>
+<tr><td>Core Services (Sprint 1-2)</td><td>9 tasks</td><td>3L, 4M, 1S, 1M</td></tr>
+<tr><td>Testing (Sprint 2)</td><td>3 tasks</td><td>1M, 2L</td></tr>
+<tr><td>CI/CD (Sprint 2-3)</td><td>3 tasks</td><td>1L, 1S, 1M</td></tr>
+<tr><td>Monitoring (Sprint 3)</td><td>4 tasks</td><td>2M, 1L, 1M</td></tr>
+<tr><td>Hardening (Sprint 3-4)</td><td>4 tasks</td><td>1L, 2M, 1M</td></tr>
+</table>
+</div>
+</div>
+
+<!-- QA -->
+<div class="panel" id="qa">
+<div class="card">
+<h3>Test Strategy (7 Layers)</h3>
+<table>
+<tr><th>Layer</th><th>Tool</th><th>Focus</th></tr>
+<tr><td>Unit</td><td>Jest/Vitest</td><td>Connection state machine, auth, dedup, backoff math</td></tr>
+<tr><td>Integration</td><td>Testcontainers</td><td>Pub/sub fan-out, offline replay, DLQ writes</td></tr>
+<tr><td>Contract</td><td>—</td><td>WS message envelope schema, REST API shapes</td></tr>
+<tr><td>E2E</td><td>Playwright + WS client</td><td>Full send → deliver → ack → read flow</td></tr>
+<tr><td>Load</td><td>k6 (WS support)</td><td>10K / 50K / 100K concurrent connections</td></tr>
+<tr><td>Chaos</td><td>Toxiproxy / Chaos Mesh</td><td>Redis outage, pod kill, network partition</td></tr>
+<tr><td>Security</td><td>OWASP ZAP + manual</td><td>Origin validation, auth bypass, injection, DoS</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>18 Test Cases</h3>
+<div class="acc"><div class="acc-h" onclick="toggle(this)">Connection Management (5 cases)</div><div class="acc-b">
+1. Valid JWT → connection opens, registered in Redis with TTL<br>
+2. Invalid/expired JWT → 401, socket destroyed pre-upgrade<br>
+3. Heartbeat: no pong after 2 cycles → terminate + cleanup<br>
+4. Graceful shutdown: SIGTERM → close 1012 + drain<br>
+5. Client opens 2 tabs → both receive independently, no cross-talk
+</div></div>
+<div class="acc"><div class="acc-h" onclick="toggle(this)">Message Delivery & Ordering (4 cases)</div><div class="acc-b">
+6. Single notification → delivered once, &lt;200ms p95<br>
+7. Cross-gateway delivery via Redis fan-out, no duplication<br>
+8. Burst of 100 → received in exact seq order<br>
+9. User on 2 gateways → exactly once via notification_id dedup
+</div></div>
+<div class="acc"><div class="acc-h" onclick="toggle(this)">Reconnection & Replay (3 cases)</div><div class="acc-b">
+10. Reconnect with last_seq → replay all missed, in order, no duplicates<br>
+11. Reconnect after retention window → explicit "gap/resync" signal<br>
+12. Mass reconnect (connection storm) → jittered backoff prevents thundering herd
+</div></div>
+<div class="acc"><div class="acc-h" onclick="toggle(this)">At-Least-Once Delivery (3 cases)</div><div class="acc-b">
+13. No ack within timeout → redelivered (5x max via XPENDING)<br>
+14. Max retries exceeded → lands in DLQ, visible for ops<br>
+15. Redis unavailable → Postgres fallback queue, recover on Redis reconnect
+</div></div>
+<div class="acc"><div class="acc-h" onclick="toggle(this)">Auth & Security (3 cases)</div><div class="acc-b">
+16. JWT expires mid-connection → server timer fires → close 4001<br>
+17. Origin header spoofing → rejected before upgrade<br>
+18. Oversized payload (&gt;64KB) → close 1009, no memory spike
+</div></div>
+</div>
+<div class="card">
+<h3>Edge Cases Identified by QA</h3>
+<table>
+<tr><th>Edge Case</th><th>Risk</th><th>Mitigation</th></tr>
+<tr><td>Clock skew across EKS nodes</td><td class="warn">Medium</td><td>Use monotonic seq numbers, never wall-clock for ordering</td></tr>
+<tr><td>Split-brain Redis connection-state</td><td class="warn">Medium</td><td>Tight TTL (90s) vs heartbeat (30s) = max 60s stale window</td></tr>
+<tr><td>Auth DoS during connection storm</td><td class="crit">High</td><td>JWT validation must be local (sig + exp only, no network call)</td></tr>
+<tr><td>Dual delivery path race (WS + FCM)</td><td class="warn">Medium</td><td>Client-side dedup by notification_id</td></tr>
+<tr><td>Stale state after OOM crash</td><td class="warn">Medium</td><td>Tune TTL tightly against heartbeat interval</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>QA Verdict</h3>
+<p style="font-size:1.1rem;font-weight:700;color:var(--gn)">Risk Level: Medium</p>
+<p style="color:var(--t2)">All 4 pre-ship blockers resolved during cross-agent coordination. Core pattern (stateful gateway + pub/sub + durable broker + offline queue + dedup) is sound and matches proven production patterns.</p>
+</div>
+</div>
+
+<!-- INFRA -->
+<div class="panel" id="infra">
+<div class="card">
+<h3>Infrastructure Stack</h3>
+<table>
+<tr><th>Component</th><th>Service</th><th>Config</th></tr>
+<tr><td>Compute</td><td>EKS (r7g.large Graviton3)</td><td>16 GiB RAM, 2 vCPU, $78/mo each</td></tr>
+<tr><td>Load Balancer</td><td>ALB</td><td>least_outstanding_requests, idle timeout 3600s, WAF</td></tr>
+<tr><td>Cache/Messaging</td><td>ElastiCache Valkey</td><td>r7g.large Multi-AZ, ~$256/mo pair</td></tr>
+<tr><td>Database</td><td>RDS PostgreSQL 16</td><td>Multi-AZ, encrypted, 7-day backups</td></tr>
+<tr><td>CI</td><td>GitHub Actions</td><td>lint → test → build → push to ECR</td></tr>
+<tr><td>CD</td><td>ArgoCD + Argo Rollouts</td><td>Canary (10% → 50% → 100%) with metric gates</td></tr>
+<tr><td>Monitoring</td><td>Prometheus + Grafana</td><td>8 custom metrics, 10 alert rules</td></tr>
+</table>
+</div>
+<div class="card">
+<h3>Connection Draining (Zero-Downtime Deploys)</h3>
+<pre>1. preStop: sleep(10)           # Wait for ALB endpoint propagation
+2. SIGTERM handler:
+   - Stop accepting new WS upgrades
+   - Send close frame 1012 (Service Restart) to all clients
+   - Wait for in-flight acks (max 70s)
+3. terminationGracePeriodSeconds: 90  # preStop(10) + drain(70) + buffer(10)
+4. Client reconnect: base × 2^attempt + rand(0, 1000ms), cap 30s</pre>
+</div>
+<div class="card">
+<h3>Monitoring: 8 Custom Prometheus Metrics</h3>
+<table>
+<tr><th>Metric</th><th>Type</th><th>Alert Threshold</th></tr>
+<tr><td><code>ws_connections_active</code></td><td>Gauge</td><td>&gt;80% capacity → scale out</td></tr>
+<tr><td><code>ws_connections_total</code></td><td>Counter</td><td>error rate &gt;10/s → investigate</td></tr>
+<tr><td><code>ws_messages_sent_total</code></td><td>Counter</td><td>—</td></tr>
+<tr><td><code>ws_message_duration_seconds</code></td><td>Histogram</td><td>P99 &gt;500ms → check Redis lag</td></tr>
+<tr><td><code>ws_reconnections_total</code></td><td>Counter</td><td>&gt;50/s → instability</td></tr>
+<tr><td><code>ws_handshake_duration_seconds</code></td><td>Histogram</td><td>—</td></tr>
+<tr><td><code>ws_connections_rejected_total</code></td><td>Counter</td><td>capacity/rate_limited → scale</td></tr>
+<tr><td><code>ws_connection_duration_seconds</code></td><td>Histogram</td><td>Short durations → client errors</td></tr>
+</table>
+</div>
+</div>
+
+<!-- COST -->
+<div class="panel" id="cost">
+<div class="card">
+<h3>Monthly Cost by Tier</h3>
+<div class="cost-bar">
+<div class="lbl">10K connections</div>
+<div class="bar"><div class="fill" style="width:46%;background:linear-gradient(90deg,var(--gn),var(--cy))"></div></div>
+<div class="val">$668/mo</div>
+</div>
+<div class="cost-bar">
+<div class="lbl">50K connections</div>
+<div class="bar"><div class="fill" style="width:72%;background:linear-gradient(90deg,var(--cy),var(--ac))"></div></div>
+<div class="val">$1,044/mo</div>
+</div>
+<div class="cost-bar">
+<div class="lbl">100K connections</div>
+<div class="bar"><div class="fill" style="width:100%;background:linear-gradient(90deg,var(--ac),var(--ac2))"></div></div>
+<div class="val">$1,456/mo</div>
+</div>
+<p style="color:var(--t3);font-size:.8rem;margin-top:12px">With 1-year reserved pricing: $513 / $804 / $1,112 per month (~25% savings)</p>
+</div>
+<div class="card">
+<h3>Cost Breakdown (100K Tier)</h3>
+<table>
+<tr><th>Component</th><th>Spec</th><th>Monthly</th></tr>
+<tr><td>EKS Worker Nodes</td><td>6× r7g.large (Graviton3)</td><td>$469</td></tr>
+<tr><td>EKS Control Plane</td><td>Managed</td><td>$73</td></tr>
+<tr><td>ALB</td><td>~34 LCUs for 100K connections</td><td>$198</td></tr>
+<tr><td>ElastiCache Valkey</td><td>r7g.large Multi-AZ pair</td><td>$256</td></tr>
+<tr><td>RDS PostgreSQL</td><td>r7g.large Multi-AZ</td><td>$302</td></tr>
+<tr><td>NAT Gateway</td><td>2 AZs + data transfer</td><td>$68</td></tr>
+<tr><td>Monitoring/Logs/Other</td><td>Prometheus, S3, Route53</td><td>$90</td></tr>
+<tr><td><strong>Total</strong></td><td></td><td><strong>$1,456</strong></td></tr>
+</table>
+</div>
+<div class="card">
+<h3>vs Managed WebSocket Services</h3>
+<table>
+<tr><th>Approach</th><th>Cost at 100K connections</th><th>Verdict</th></tr>
+<tr><td>This architecture (EKS + ALB)</td><td><span class="check">$1,456/mo</span></td><td class="check">✓ Best value</td></tr>
+<tr><td>AWS API Gateway WebSocket</td><td><span class="crit">$2,000+/mo</span></td><td>Connection-minutes pricing kills you at scale</td></tr>
+<tr><td>Pusher / Ably (managed)</td><td><span class="crit">$3,000+/mo</span></td><td>Per-connection pricing, vendor lock-in</td></tr>
+</table>
+</div>
+</div>
+</div>
+
+<div style="text-align:center;padding:40px;color:var(--t3);font-size:.8rem">
+Built by AI-Org Army — 5 agents × 3 AI models × real cross-agent coordination<br>
+<span style="color:var(--ac)">ai-org skill v2 · 26 roles available · tested & validated</span>
+</div>
+
+<script>
+function show(id){
+document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+event.target.classList.add('active');
+}
+function toggle(el){
+el.classList.toggle('open');
+el.nextElementSibling.classList.toggle('open');
+}
+</script>
+</body>
+</html>

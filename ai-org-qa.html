@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Org Army — Interactive Q&A</title>
+<style>
+:root{--bg:#0a0a0f;--s1:#12121a;--s2:#1a1a26;--b:#2a2a3a;--ac:#6c5ce7;--ac2:#a855f7;--cy:#06b6d4;--gn:#10b981;--or:#f59e0b;--rd:#ef4444;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t1);height:100vh;display:flex;flex-direction:column}
+header{padding:16px 24px;background:var(--s1);border-bottom:1px solid var(--b);display:flex;align-items:center;gap:16px}
+header h1{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .badge{padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:600;background:rgba(16,185,129,.12);color:var(--gn)}
+.main{flex:1;display:flex;overflow:hidden}
+.sidebar{width:280px;background:var(--s1);border-right:1px solid var(--b);padding:16px;overflow-y:auto;flex-shrink:0}
+.sidebar h3{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin:16px 0 8px}
+.sidebar h3:first-child{margin-top:0}
+.q-btn{width:100%;text-align:left;padding:10px 12px;background:var(--s2);border:1px solid var(--b);border-radius:8px;color:var(--t2);font-size:.8rem;cursor:pointer;margin-bottom:6px;transition:all .2s;line-height:1.4}
+.q-btn:hover{border-color:var(--ac);color:var(--t1);background:rgba(108,92,231,.08)}
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.msg{max-width:85%;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end}
+.msg.user .bubble{background:var(--ac);color:white;border-radius:16px 16px 4px 16px;padding:12px 16px;font-size:.9rem}
+.msg.bot{align-self:flex-start;max-width:90%}
+.msg.bot .bubble{background:var(--s1);border:1px solid var(--b);border-radius:16px 16px 16px 4px;padding:16px 20px;font-size:.88rem;line-height:1.7;color:var(--t2)}
+.msg.bot .bubble h4{color:var(--t1);font-size:.95rem;margin:12px 0 6px}
+.msg.bot .bubble h4:first-child{margin-top:0}
+.msg.bot .bubble table{width:100%;border-collapse:collapse;margin:8px 0;font-size:.82rem}
+.msg.bot .bubble th,.msg.bot .bubble td{padding:6px 10px;text-align:left;border-bottom:1px solid rgba(42,42,58,.5)}
+.msg.bot .bubble th{color:var(--t3);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.msg.bot .bubble code{background:var(--s2);padding:1px 5px;border-radius:3px;font-size:.8rem;color:var(--cy);font-family:'Cascadia Code','Fira Code',monospace}
+.msg.bot .bubble pre{background:var(--s2);border:1px solid var(--b);border-radius:6px;padding:12px;overflow-x:auto;font-size:.78rem;line-height:1.7;font-family:'Cascadia Code','Fira Code',monospace;color:var(--t2);margin:8px 0}
+.msg.bot .bubble .check{color:var(--gn)}
+.msg.bot .bubble .warn{color:var(--or)}
+.msg.bot .bubble .crit{color:var(--rd)}
+.msg.bot .bubble ul,.msg.bot .bubble ol{padding-left:20px;margin:6px 0}
+.msg.bot .bubble li{margin:4px 0}
+.msg .who{font-size:.68rem;color:var(--t3);margin-bottom:4px;font-weight:600}
+.msg.bot .who span{display:inline-block;padding:1px 6px;border-radius:4px;margin-left:4px;font-size:.65rem}
+.role-cto{background:rgba(108,92,231,.15);color:var(--ac)}
+.role-dev{background:rgba(16,185,129,.15);color:var(--gn)}
+.role-qa{background:rgba(245,158,11,.15);color:var(--or)}
+.role-devops{background:rgba(6,182,212,.15);color:var(--cy)}
+.role-vpe{background:rgba(168,85,247,.15);color:var(--ac2)}
+.input-area{padding:16px 24px;background:var(--s1);border-top:1px solid var(--b);display:flex;gap:12px}
+.input-area input{flex:1;padding:12px 16px;background:var(--s2);border:1px solid var(--b);border-radius:12px;color:var(--t1);font-size:.9rem;outline:none;transition:border-color .2s}
+.input-area input:focus{border-color:var(--ac)}
+.input-area input::placeholder{color:var(--t3)}
+.input-area button{padding:12px 24px;background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;border-radius:12px;color:white;font-weight:700;font-size:.85rem;cursor:pointer;transition:transform .1s}
+.input-area button:hover{transform:scale(1.03)}
+.typing{display:flex;gap:4px;padding:8px 0}
+.typing span{width:6px;height:6px;background:var(--t3);border-radius:50%;animation:bounce .6s infinite alternate}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{to{transform:translateY(-6px);background:var(--ac)}}
+@media(max-width:768px){.sidebar{display:none}.msg{max-width:95%}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>AI-Org Army</h1>
+<span class="badge">Interactive Q&A — Test Validation</span>
+<span style="color:var(--t3);font-size:.75rem;margin-left:auto">Ask anything about the WebSocket Notification Service plan</span>
+</header>
+
+<div class="main">
+<div class="sidebar">
+<h3>Architecture</h3>
+<button class="q-btn" onclick="ask(this.textContent)">What tech stack did you choose and why?</button>
+<button class="q-btn" onclick="ask(this.textContent)">Why ws instead of Socket.IO?</button>
+<button class="q-btn" onclick="ask(this.textContent)">How does the message flow work end to end?</button>
+<button class="q-btn" onclick="ask(this.textContent)">Why Redis Streams over NATS JetStream?</button>
+<button class="q-btn" onclick="ask(this.textContent)">What's the data model?</button>
+
+<h3>Decisions & Debates</h3>
+<button class="q-btn" onclick="ask(this.textContent)">What did the agents disagree on?</button>
+<button class="q-btn" onclick="ask(this.textContent)">Why ALB instead of NLB?</button>
+<button class="q-btn" onclick="ask(this.textContent)">How is JWT handled mid-session?</button>
+<button class="q-btn" onclick="ask(this.textContent)">What happens with slow consumers?</button>
+
+<h3>Infrastructure</h3>
+<button class="q-btn" onclick="ask(this.textContent)">How much does this cost?</button>
+<button class="q-btn" onclick="ask(this.textContent)">How does deployment work without dropping connections?</button>
+<button class="q-btn" onclick="ask(this.textContent)">What monitoring and alerts are set up?</button>
+
+<h3>QA & Security</h3>
+<button class="q-btn" onclick="ask(this.textContent)">What are the biggest risks?</button>
+<button class="q-btn" onclick="ask(this.textContent)">How do you handle reconnection and missed messages?</button>
+<button class="q-btn" onclick="ask(this.textContent)">What security vulnerabilities were considered?</button>
+
+<h3>Execution</h3>
+<button class="q-btn" onclick="ask(this.textContent)">What's the sprint plan?</button>
+<button class="q-btn" onclick="ask(this.textContent)">How many tasks and what's the timeline?</button>
+<button class="q-btn" onclick="ask(this.textContent)">What can scale to 1M connections?</button>
+</div>
+
+<div class="chat-area">
+<div class="messages" id="messages">
+<div class="msg bot">
+<div class="who">AI-Org Army <span class="role-cto">CTO</span><span class="role-dev">Dev</span><span class="role-qa">QA</span><span class="role-devops">DevOps</span><span class="role-vpe">VP Eng</span></div>
+<div class="bubble">
+<h4>Welcome to the AI-Org Q&A</h4>
+I'm ready to answer questions about the <strong>Real-Time WebSocket Notification Service</strong> that 5 agents planned together.<br><br>
+You can:<br>
+• Click any question in the sidebar<br>
+• Type your own question below<br><br>
+Every answer comes from what the agents actually produced — with attribution to which role provided the information.
+</div>
+</div>
+</div>
+<div class="input-area">
+<input type="text" id="input" placeholder="Ask about the architecture, decisions, costs, tests..." onkeydown="if(event.key==='Enter')send()">
+<button onclick="send()">Ask</button>
+</div>
+</div>
+</div>
+
+<script>
+const KB = {
+"what tech stack did you choose and why?":{
+role:"CTO",badge:"role-cto",
+answer:`<h4>Final Tech Stack</h4>
+<table>
+<tr><th>Layer</th><th>Choice</th><th>Why</th></tr>
+<tr><td>Runtime</td><td><code>Node.js 22 LTS + TypeScript</code></td><td>Event-driven I/O ideal for holding many concurrent WS connections. TypeScript for type safety.</td></tr>
+<tr><td>WS Library</td><td><code>ws</code></td><td>45K msg/s vs Socket.IO's 27K msg/s. Lower overhead, full control over reconnection.</td></tr>
+<tr><td>HTTP</td><td><code>Fastify</code></td><td>Faster than Express, native TypeScript support.</td></tr>
+<tr><td>Durable Messaging</td><td><code>Redis Streams</code> (MVP)</td><td>Reuses existing Redis infra — zero additional ops. 480K msg/s capacity.</td></tr>
+<tr><td>Ephemeral Fan-out</td><td><code>Redis Pub/Sub</code></td><td>Fire-and-forget cross-gateway delivery. Sub-ms latency.</td></tr>
+<tr><td>Database</td><td><code>PostgreSQL 16</code></td><td>ACID transactions, JSONB for flexible payloads, proven at Slack-scale.</td></tr>
+<tr><td>Load Balancer</td><td><code>ALB</code></td><td>L7 health checks catch deadlocked gateways. WAF for connection-storm protection.</td></tr>
+<tr><td>Compute</td><td><code>EKS + r7g.large</code></td><td>Graviton3 — 20% cheaper than x86 for same memory. Memory-optimized for WS.</td></tr>
+</table>
+<br>The guiding principle: <strong>"boring stack, good architecture"</strong> — following Linear's path to $35M ARR with 3 engineers.`
+},
+"why ws instead of socket.io?":{
+role:"CTO",badge:"role-cto",
+answer:`<h4>ws vs Socket.IO — Benchmarked Decision</h4>
+Concrete benchmark data found during research:
+<ul>
+<li><code>ws</code> library: <strong>~45,000 msg/s</strong> with 1000 clients</li>
+<li>Socket.IO: <strong>~27,000 msg/s</strong> with 1000 clients</li>
+</ul>
+That's a <strong>67% throughput advantage</strong> for <code>ws</code>.<br><br>
+Socket.IO adds:
+<ul>
+<li>Protocol overhead (custom packet format on top of WS)</li>
+<li>Auto-reconnection logic we don't need (we build our own for full control)</li>
+<li>HTTP long-polling fallback (unnecessary — ALB handles WS natively)</li>
+</ul>
+The tradeoff: we must implement reconnection ourselves — jittered exponential backoff (1s base, 30s cap, ±500ms jitter), connection state machine, and 30s heartbeat ping/pong. More work upfront, but full control over the behavior.`
+},
+"how does the message flow work end to end?":{
+role:"CTO + Dev",badge:"role-cto",
+answer:`<h4>Notification Flow: Trigger → Delivery</h4>
+<pre>Producer → POST /v1/notifications → Notification API
+  → Write to PostgreSQL (notification_id + seq number)
+  → XADD to Redis Stream notifications:{userId}
+  → Delivery Worker XREADGROUP picks up message
+  → Check Redis revocation set (is JWT revoked?)
+  → Check Redis connection registry (is user online?)
+  
+  IF ONLINE:
+    → PUBLISH to Redis Pub/Sub → Gateway receives
+    → Gateway fans out to local WS connection
+    → Client receives {notification_id, seq, payload}
+    → Client sends {type: "ack", seq: N}
+    → Gateway XACKs the stream entry ✓
+  
+  IF OFFLINE:
+    → Message stays in Stream unacked
+    → On reconnect: client sends last_seq
+    → Gateway replays via XRANGE from last_seq
+    → Client deduplicates by notification_id</pre>
+<strong>Delivery target:</strong> sub-200ms p95 for online users (matching Slack's published target).`
+},
+"why redis streams over nats jetstream?":{
+role:"CTO (revised after debate)",badge:"role-cto",
+answer:`<h4>This Was Actually a Debate</h4>
+<strong>CTO initially specified NATS JetStream.</strong> Here's what happened:
+<ol>
+<li>I (parent) provided 2026 benchmark data showing Redis Streams is simpler</li>
+<li>QA caught the divergence when Senior Dev's code used Redis Streams but CTO said NATS</li>
+<li>CTO evaluated both and made the pragmatic call</li>
+</ol>
+<h4>Decision Matrix</h4>
+<table>
+<tr><th>Factor</th><th>Redis Streams</th><th>NATS JetStream</th></tr>
+<tr><td>Throughput</td><td>480K msg/s</td><td>820K msg/s</td></tr>
+<tr><td>Latency</td><td>&lt;1ms</td><td>1-5ms</td></tr>
+<tr><td>Extra infra needed?</td><td class="check">No (reuses existing Redis)</td><td class="crit">Yes (separate cluster)</td></tr>
+<tr><td>DLQ</td><td>DIY via XPENDING</td><td>Built-in advisories</td></tr>
+<tr><td>Exactly-once</td><td class="warn">No (at-least-once)</td><td class="check">Yes</td></tr>
+</table>
+<br><strong>Result:</strong> Redis Streams for MVP (one fewer dependency). NATS JetStream deferred to V2 behind an <code>IMessageBroker</code> abstraction — one adapter swap, zero business logic changes.`
+},
+"what's the data model?":{
+role:"CTO",badge:"role-cto",
+answer:`<h4>6 PostgreSQL Tables</h4>
+<table>
+<tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr>
+<tr><td><code>notifications</code></td><td>Core record</td><td>id (UUID), seq (BIGSERIAL), user_id, type, status, priority, data (JSONB), created_at</td></tr>
+<tr><td><code>channels</code></td><td>Topic/project rooms</td><td>id, name, type (topic/project/team/direct)</td></tr>
+<tr><td><code>subscriptions</code></td><td>User→channel mapping</td><td>user_id, channel_id, muted</td></tr>
+<tr><td><code>delivery_log</code></td><td>Per-channel tracking</td><td>notification_id, delivery_channel (ws/fcm/apns), status, attempt</td></tr>
+<tr><td><code>user_preferences</code></td><td>Settings</td><td>enabled_channels, quiet_hours, max_per_hour, timezone</td></tr>
+<tr><td><code>delivery_dlq</code></td><td>Dead letter queue</td><td>notification_id, payload, failure_reason, attempts</td></tr>
+</table>
+<h4>Redis Data Structures</h4>
+<ul>
+<li><code>conn:{userId}</code> → Hash {gatewayId, connectedAt, lastSeq} with TTL</li>
+<li><code>channel:{channelId}</code> → Set of subscribed userIds</li>
+<li>Stream <code>notifications:{userId}</code> → MAXLEN ~10000</li>
+</ul>`
+},
+"what did the agents disagree on?":{
+role:"All Agents",badge:"role-cto",
+answer:`<h4>4 Architecture Debates — Real Cross-Agent Disagreement</h4>
+<table>
+<tr><th>#</th><th>Issue</th><th>Who vs Who</th><th>Resolution</th></tr>
+<tr><td>1</td><td>NATS vs Redis Streams</td><td>CTO (NATS) vs Parent (Redis Streams)</td><td class="check">Redis Streams MVP, NATS V2</td></tr>
+<tr><td>2</td><td>ALB vs NLB</td><td>CTO (NLB) vs DevOps (ALB)</td><td class="check">ALB with least_outstanding_requests</td></tr>
+<tr><td>3</td><td>JWT mid-session</td><td>QA flagged gap, CTO + Dev unaware</td><td class="check">Timer + in-band refresh + revocation</td></tr>
+<tr><td>4</td><td>Backpressure</td><td>QA flagged OOM risk, not designed</td><td class="check">100-msg cap, 3-strike disconnect</td></tr>
+</table>
+<br>This is exactly what makes multi-agent valuable — a single agent wouldn't have caught these. QA challenged Dev. DevOps challenged CTO. Decisions improved because of the disagreement.`
+},
+"why alb instead of nlb?":{
+role:"DevOps (challenged CTO)",badge:"role-devops",
+answer:`<h4>DevOps Successfully Changed CTO's Mind</h4>
+<strong>CTO originally specified:</strong> NLB (L4, TCP mode, least-connections)<br>
+<strong>DevOps pushed back with 3 arguments:</strong>
+<ol>
+<li><strong>L7 health checks</strong> — ALB can hit <code>/health</code> endpoint. A deadlocked gateway that accepts TCP but is internally broken would pass NLB's L4 check but fail ALB's HTTP check.</li>
+<li><strong>WAF integration</strong> — connection-storm protection, Origin header validation at the LB layer.</li>
+<li><strong>Native K8s Ingress</strong> — AWS Load Balancer Controller provisions ALB from annotations. NLB requires manual config.</li>
+</ol>
+<strong>CTO's response:</strong> "You're right. Revised position: ALB for ≤100K connections. NLB only at 200K-500K where ALB LCU costs become unreasonable."<br><br>
+<strong>Key config:</strong> <code>load_balancing.algorithm.type = least_outstanding_requests</code> (NOT round-robin — round-robin creates uneven distribution for long-lived WS connections).`
+},
+"how is jwt handled mid-session?":{
+role:"Senior Developer",badge:"role-dev",
+answer:`<h4>Dual Mechanism: Timer + In-Band Refresh</h4>
+This was flagged by QA as a security gap — Senior Dev designed the full solution:
+<pre>// At handshake: extract exp from JWT
+// Start two timers per connection:
+
+Warning timer (60s before expiry):
+  → send {type: "auth:token_expiring", expiresIn: 60}
+
+Hard expiry timer (at exp):
+  → ws.close(4001, "token_expired")
+
+Client sends {type: "auth:refresh", token: "new_jwt"}:
+  → Validate: same sub (prevents token-swap attack)
+  → Valid signature, exp in future
+  → Clear both timers, reset with new exp
+
+Immediate revocation (admin/logout):
+  → Redis SADD revoked_jtis:{jti}
+  → Delivery worker checks SISMEMBER before each dispatch
+  → If revoked: push auth:revoked → close 4001</pre>
+<strong>Close codes:</strong> 4001 = expired/revoked, 4003 = refresh rejected or sub mismatch.`
+},
+"what happens with slow consumers?":{
+role:"Senior Developer + QA",badge:"role-dev",
+answer:`<h4>Buffer → Drop → Disconnect (Safe)</h4>
+QA flagged this as a guaranteed OOM risk at scale. Senior Dev designed:
+<pre>MAX_QUEUE_DEPTH = 100 messages per connection
+SLOW_CONSUMER_STRIKE_LIMIT = 3
+
+On each message send:
+  if sendQueue.length >= 100:
+    slowStrikes++
+    drop current message (don't reorder)
+    increment ws.slow_consumer.drops metric
+    if slowStrikes >= 3:
+      ws.close(4008, "slow_consumer")
+  else:
+    push to queue
+    slowStrikes = 0</pre>
+<strong>Why disconnect is safe:</strong> Durability lives in Redis Streams, not the in-flight queue. Client reconnects with <code>lastSeq</code> and replays missed messages — no data loss.`
+},
+"how much does this cost?":{
+role:"DevOps/SRE",badge:"role-devops",
+answer:`<h4>Monthly Cost by Scale (AWS us-east-1, on-demand)</h4>
+<table>
+<tr><th>Tier</th><th>Compute</th><th>Redis</th><th>Postgres</th><th>ALB</th><th>Other</th><th>Total</th></tr>
+<tr><td>10K conn</td><td>$156</td><td>$256</td><td>$95</td><td>$23</td><td>$138</td><td><strong>$668</strong></td></tr>
+<tr><td>50K conn</td><td>$313</td><td>$256</td><td>$185</td><td>$99</td><td>$191</td><td><strong>$1,044</strong></td></tr>
+<tr><td>100K conn</td><td>$469</td><td>$256</td><td>$302</td><td>$198</td><td>$231</td><td><strong>$1,456</strong></td></tr>
+</table>
+With 1-year reserved: ~25% savings → <strong>$513 / $804 / $1,112</strong><br><br>
+<strong>vs managed alternatives:</strong> AWS API Gateway WebSocket = $2,000+/mo at 100K. Pusher/Ably = $3,000+/mo. This architecture is 2-3x cheaper at scale.<br><br>
+<strong>Key insight from DevOps:</strong> Using Valkey engine on ElastiCache instead of Redis OSS saves 20% ($128/mo vs $160/mo per node).`
+},
+"how does deployment work without dropping connections?":{
+role:"DevOps/SRE + CTO",badge:"role-devops",
+answer:`<h4>Zero-Downtime Connection Draining</h4>
+<pre>Step 1: preStop sleep(10)
+  → Waits for ALB endpoint propagation (5-15s lag)
+  → ALB stops routing NEW connections to this pod
+
+Step 2: SIGTERM handler in gateway app
+  → Stop accepting new WebSocket upgrades
+  → Send WS close frame code 1012 ("Service Restart")
+    to ALL connected clients
+  → Wait for in-flight delivery acks (max 70s)
+
+Step 3: Pod terminates
+  terminationGracePeriodSeconds: 90
+  = preStop(10) + drain(70) + buffer(10)
+
+Client behavior on receiving 1012:
+  → Apply jittered exponential backoff
+  → base_delay × 2^attempt + rand(0, 1000ms)
+  → Capped at 30s
+  → Reconnect to a different (healthy) pod</pre>
+This prevents <strong>thundering herd</strong> — without jittered backoff, all clients would reconnect simultaneously and overwhelm the remaining pods.`
+},
+"what monitoring and alerts are set up?":{
+role:"CTO + DevOps",badge:"role-devops",
+answer:`<h4>8 Custom Prometheus Metrics + 10 Alert Rules</h4>
+<table>
+<tr><th>Metric</th><th>Type</th><th>Alert Trigger</th></tr>
+<tr><td><code>ws_connections_active</code></td><td>Gauge</td><td>&gt;80% capacity → scale out</td></tr>
+<tr><td><code>ws_connections_total</code></td><td>Counter</td><td>error close rate &gt;10/s</td></tr>
+<tr><td><code>ws_message_duration_seconds</code></td><td>Histogram</td><td>P99 &gt;500ms</td></tr>
+<tr><td><code>ws_reconnections_total</code></td><td>Counter</td><td>&gt;50/s = instability</td></tr>
+<tr><td><code>ws_connections_rejected_total</code></td><td>Counter</td><td>capacity/rate_limited</td></tr>
+<tr><td><code>ws_backpressure_drops_total</code></td><td>Counter</td><td>any sustained rate</td></tr>
+</table>
+<br><strong>Critical alerts:</strong> Connection storm (+5000 in 1min), gateway near capacity, Redis replica lag &gt;10s, API error rate &gt;1%, pod crash-looping.<br><br>
+<strong>DevOps added:</strong> ServiceMonitor CRD on port 9090 (separate from WS port 8080) so health checks and metric scrapes don't pollute connection metrics.`
+},
+"what are the biggest risks?":{
+role:"QA Engineer",badge:"role-qa",
+answer:`<h4>QA Risk Verdict: Medium (all blockers resolved)</h4>
+<table>
+<tr><th>Risk</th><th>Severity</th><th>Status</th></tr>
+<tr><td>NATS vs Redis Streams divergence</td><td class="warn">Medium</td><td class="check">✓ Resolved (Redis Streams MVP)</td></tr>
+<tr><td>ALB vs NLB</td><td class="warn">Low</td><td class="check">✓ Resolved (ALB)</td></tr>
+<tr><td>JWT mid-session expiry</td><td class="crit">High</td><td class="check">✓ Resolved (timer + refresh)</td></tr>
+<tr><td>Backpressure / OOM</td><td class="crit">High</td><td class="check">✓ Resolved (100-msg cap, 3 strikes)</td></tr>
+</table>
+<h4>Remaining Edge Cases to Watch</h4>
+<ul>
+<li><strong>Clock skew</strong> — use monotonic seq numbers, never wall-clock for ordering</li>
+<li><strong>Stale Redis state after OOM crash</strong> — up to 60s of silent delivery failure until TTL expires</li>
+<li><strong>Auth DoS during connection storm</strong> — JWT validation must be local (sig + exp only, no network call)</li>
+<li><strong>Dual delivery race</strong> — WS + FCM push at the same time → client-side dedup by notification_id</li>
+</ul>`
+},
+"how do you handle reconnection and missed messages?":{
+role:"Senior Developer + QA",badge:"role-dev",
+answer:`<h4>Sequence-Based Replay from Redis Streams</h4>
+<ol>
+<li>Every notification gets a <strong>monotonically increasing sequence number</strong> per user</li>
+<li>Client tracks <code>lastSeq</code> locally</li>
+<li>On reconnect, client sends <code>lastSeq</code> in handshake query params</li>
+<li>Gateway runs <code>XRANGE notifications:user:{userId} {lastSeq} +</code></li>
+<li>All missed notifications replayed <strong>in order, no duplicates</strong></li>
+<li>Client also deduplicates by <code>notification_id</code> (belt-and-suspenders)</li>
+</ol>
+<h4>Client-Side Reconnection</h4>
+<pre>State machine: CONNECTING → OPEN → CLOSING → CLOSED → RECONNECTING
+Backoff: base(1s) × 2^attempt + rand(0, 1000ms), cap 30s
+Heartbeat: 30s ping/pong, 10s timeout
+On 2 missed pongs: server terminates connection</pre>
+<strong>QA flagged:</strong> This is the #1 place real-world WS systems silently drop messages. The seq-based contract with gap detection is critical — if <code>received_seq != expected_seq</code>, client requests explicit replay.`
+},
+"what security vulnerabilities were considered?":{
+role:"QA + CTO",badge:"role-qa",
+answer:`<h4>Security Checklist</h4>
+<table>
+<tr><th>Vulnerability</th><th>Mitigation</th></tr>
+<tr><td>Origin header spoofing</td><td>Validated at ALB/WAF layer (L7) + app-level check</td></tr>
+<tr><td>JWT expiry bypass</td><td>Server-side timer per connection, hard disconnect at exp</td></tr>
+<tr><td>Token swap attack</td><td>In-band refresh validates <code>sub</code> matches original connection</td></tr>
+<tr><td>Token revocation gap</td><td>Redis revocation set checked per delivery</td></tr>
+<tr><td>Message injection</td><td>Zod schema validation on all client→server messages</td></tr>
+<tr><td>Channel authorization bypass</td><td>Subscribe validates user owns the channel, not just auth-checked</td></tr>
+<tr><td>Connection exhaustion (DoS)</td><td>Per-IP rate limiting at WAF + global pod ceiling</td></tr>
+<tr><td>Payload overflow</td><td><code>maxPayload: 64KB</code> — ws auto-closes with 1009</td></tr>
+<tr><td>Upgrade header attacks</td><td>ws library handles; fuzzing pass in Sprint 4</td></tr>
+<tr><td>RAG-style data leakage</td><td>N/A for this service (no AI retrieval layer)</td></tr>
+</table>`
+},
+"what's the sprint plan?":{
+role:"VP Engineering",badge:"role-vpe",
+answer:`<h4>4 Sprints × 2 Weeks = 8 Weeks to Production</h4>
+<table>
+<tr><th>Sprint</th><th>Goal</th><th>Key Deliverables</th></tr>
+<tr><td><strong>Sprint 1</strong><br>Weeks 1-2</td><td>Foundations</td><td>Repo scaffold · Terraform (VPC, EKS) · Redis + Postgres provisioning · ALB config · CI pipeline · WS gateway skeleton + JWT auth · REST API stub</td></tr>
+<tr><td><strong>Sprint 2</strong><br>Weeks 3-4</td><td>Core Functionality</td><td>Heartbeat · Reconnection + backoff · Redis Streams delivery · Offline replay · Dedup · Backpressure · Graceful shutdown · Unit tests · Start metrics</td></tr>
+<tr><td><strong>Sprint 3</strong><br>Weeks 5-6</td><td>Pipeline + Observability</td><td>Integration tests · Load tests (k6) · ArgoCD canary deploys · Staging parity · Prometheus dashboards · 10 alert rules · Distributed tracing</td></tr>
+<tr><td><strong>Sprint 4</strong><br>Weeks 7-8</td><td>Hardening + Launch</td><td>Chaos testing · Security review · 4 incident runbooks · Production rollout with feature flags + rollback plan</td></tr>
+</table>`
+},
+"how many tasks and what's the timeline?":{
+role:"VP Engineering",badge:"role-vpe",
+answer:`<h4>31 Tasks Across 4 Sprints</h4>
+<table>
+<tr><th>Phase</th><th>Count</th><th>Sizes</th></tr>
+<tr><td>Foundation (Sprint 1)</td><td>8 tasks</td><td>1S, 4M, 2L, 1M</td></tr>
+<tr><td>Core Services (Sprint 1-2)</td><td>9 tasks</td><td>3L, 4M, 1S, 1M</td></tr>
+<tr><td>Testing (Sprint 2)</td><td>3 tasks</td><td>1M, 2L</td></tr>
+<tr><td>CI/CD (Sprint 2-3)</td><td>3 tasks</td><td>1L, 1S, 1M</td></tr>
+<tr><td>Monitoring (Sprint 3)</td><td>4 tasks</td><td>2M, 1L, 1M</td></tr>
+<tr><td>Hardening (Sprint 3-4)</td><td>4 tasks</td><td>1L, 2M, 1M</td></tr>
+</table>
+<br><strong>Critical path:</strong> Repo scaffold → Terraform/EKS → Redis + Postgres provisioning → WS gateway core → reconnection logic → integration tests → canary deploy → chaos testing → production rollout.<br><br>
+<strong>Key dependency:</strong> Load testing can't start until Sprint 2 end (needs WS gateway + Redis + ALB deployed to staging).`
+},
+"what can scale to 1m connections?":{
+role:"CTO",badge:"role-cto",
+answer:`<h4>Scaling Roadmap: 10K → 100K → 1M</h4>
+<table>
+<tr><th>Scale</th><th>Architecture Changes</th><th>Infra</th></tr>
+<tr><td><strong>10K</strong></td><td>Single gateway pod. Focus on correctness.</td><td>1× r7g.large + Redis standalone</td></tr>
+<tr><td><strong>100K</strong></td><td>3-5 gateway pods + ALB. Autoscale on ws_connections_active.</td><td>EKS + ALB + Redis cluster + RDS Multi-AZ</td></tr>
+<tr><td><strong>1M</strong> (V2/V3)</td><td>20+ pods. ALB → NLB (LCU cost). Redis Streams → NATS JetStream. Multi-region + geo-routing. Multi-layer fan-out.</td><td>EKS multi-region + NLB + Redis Cluster 6+ + NATS cluster + RDS multi-region</td></tr>
+</table>
+<h4>Key V2 Changes</h4>
+<ul>
+<li><strong>IMessageBroker swap:</strong> RedisStreamsBroker → NATSJetStreamBroker (one adapter, zero business logic changes)</li>
+<li><strong>Exactly-once delivery:</strong> Needed for transactional notifications (payments, legal)</li>
+<li><strong>OS-level tuning:</strong> ulimit -n (file descriptors), TCP buffer sizes, SO_REUSEPORT</li>
+<li><strong>Each pod handles 50K-100K connections</strong> with proper tuning (confirmed by multiple 2026 sources)</li>
+</ul>`
+}
+};
+
+function normalize(q){return q.toLowerCase().replace(/[?.!]/g,'').trim()}
+
+function findAnswer(q){
+const nq=normalize(q);
+for(const[k,v]of Object.entries(KB)){
+if(normalize(k)===nq)return v;
+}
+let best=null,bestScore=0;
+for(const[k,v]of Object.entries(KB)){
+const kw=normalize(k).split(/\s+/);
+const qw=nq.split(/\s+/);
+let score=0;
+for(const w of qw){
+if(w.length<3)continue;
+for(const kk of kw){if(kk.includes(w)||w.includes(kk))score++;}
+}
+if(score>bestScore){bestScore=score;best=v;}
+}
+if(bestScore>=2)return best;
+return null;
+}
+
+function addMsg(text,isUser){
+const d=document.getElementById('messages');
+const m=document.createElement('div');
+m.className='msg '+(isUser?'user':'bot');
+if(isUser){
+m.innerHTML=`<div class="bubble">${text}</div>`;
+}else{
+m.innerHTML=text;
+}
+d.appendChild(m);
+d.scrollTop=d.scrollHeight;
+return m;
+}
+
+function showTyping(){
+const d=document.getElementById('messages');
+const m=document.createElement('div');
+m.className='msg bot';m.id='typing';
+m.innerHTML='<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+d.appendChild(m);d.scrollTop=d.scrollHeight;
+}
+function hideTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+function ask(q){
+document.getElementById('input').value='';
+addMsg(q,true);
+showTyping();
+setTimeout(()=>{
+hideTyping();
+const a=findAnswer(q);
+if(a){
+addMsg(`<div class="who">AI-Org Army <span class="${a.badge}">${a.role}</span></div><div class="bubble">${a.answer}</div>`,false);
+}else{
+addMsg(`<div class="who">AI-Org Army</div><div class="bubble">I don't have a pre-loaded answer for that specific question in this demo. In the real ai-org skill, I'd dispatch agents to research and answer it live.<br><br>Try one of the sidebar questions, or ask about: <strong>tech stack, costs, JWT security, backpressure, sprint plan, scaling, load balancer, Redis Streams, testing, monitoring, reconnection, deployment</strong>.</div>`,false);
+}
+},800+Math.random()*600);
+}
+
+function send(){
+const i=document.getElementById('input');
+const q=i.value.trim();
+if(!q)return;
+ask(q);
+}
+</script>
+</body>
+</html>

@@ -4,70 +4,161 @@
       "title": "CEO Strategist",
       "mode": "scout",
       "tier": "strategic",
-      "model_priority": ["ai-platform-opus-5", "ai-platform-gpt-5-6-sol", "litellm-opus-5"],
+      "model_priority": ["opus-4-6", "opus-5", "ai-platform-opus-5"],
       "triggers": ["plan", "strategy", "evaluate", "should we", "vision", "goal", "direction"]
     },
     "cto": {
       "title": "CTO Architect",
       "mode": "scout",
       "tier": "strategic",
-      "model_priority": ["ai-platform-gpt-5-6-sol", "ai-platform-opus-5", "litellm-gpt-5-6-sol"],
+      "model_priority": ["sonnet-5", "opus-4-6", "ai-platform-gpt-5-6-sol"],
       "triggers": ["architecture", "tech stack", "build", "system design", "infrastructure", "scale"]
     },
     "cfo": {
       "title": "CFO Analyst",
       "mode": "scout",
       "tier": "strategic",
-      "model_priority": ["ai-platform-sonnet-5", "ai-platform-gpt-5-6-terra", "litellm-sonnet-5"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
       "triggers": ["budget", "cost", "pricing", "revenue", "financial", "ROI", "unit economics"]
     },
     "vp_engineering": {
       "title": "VP Engineering",
       "mode": "scout",
       "tier": "management",
-      "model_priority": ["ai-platform-sonnet-5", "ai-platform-gpt-5-6-terra", "litellm-sonnet-5"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
       "triggers": ["sprint", "tasks", "breakdown", "implement", "build", "code"]
     },
     "vp_product": {
       "title": "VP Product",
       "mode": "scout",
       "tier": "management",
-      "model_priority": ["ai-platform-gpt-5-6-luna", "ai-platform-sonnet-4-6", "litellm-sonnet-5"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-gpt-5-6-luna"],
       "triggers": ["features", "users", "product", "requirements", "specs", "UX"]
     },
     "vp_sales_marketing": {
       "title": "VP Sales & Marketing",
       "mode": "scout",
       "tier": "management",
-      "model_priority": ["ai-platform-gpt-5-6-luna", "ai-platform-sonnet-5", "litellm-gpt-5-6-luna"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-gpt-5-6-luna"],
       "triggers": ["launch", "go-to-market", "GTM", "marketing", "growth", "acquisition", "sales"]
+    },
+    "program_manager": {
+      "title": "Program Manager",
+      "mode": "scout",
+      "tier": "management",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["timeline", "program", "coordination", "dependencies", "milestones", "cross-team"]
     },
     "senior_developer": {
       "title": "Senior Developer",
       "mode": "worker",
       "tier": "execution",
-      "model_priority": ["ai-platform-sonnet-5", "ai-platform-gpt-5-6-terra", "litellm-sonnet-5"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
       "triggers": ["code", "implement", "build", "develop", "create"]
     },
     "qa_engineer": {
       "title": "QA Engineer",
       "mode": "scout",
       "tier": "execution",
-      "model_priority": ["ai-platform-sonnet-4-6", "ai-platform-gpt-5-6-terra", "litellm-sonnet-4-6"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-4-6"],
       "triggers": ["test", "quality", "review", "bugs", "edge cases"]
     },
     "security_engineer": {
       "title": "Security Engineer",
       "mode": "scout",
       "tier": "execution",
-      "model_priority": ["ai-platform-opus-5", "ai-platform-sonnet-5", "litellm-opus-5"],
-      "triggers": ["security", "auth", "vulnerability", "threat", "OWASP", "audit", "compliance"]
+      "model_priority": ["opus-4-6", "sonnet-5", "ai-platform-opus-5"],
+      "triggers": ["security", "auth", "vulnerability", "threat", "OWASP", "audit"]
+    },
+    "devops_sre": {
+      "title": "DevOps/SRE Engineer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["deploy", "infrastructure", "CI/CD", "monitoring", "kubernetes", "docker", "terraform"]
+    },
+    "data_engineer": {
+      "title": "Data Engineer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["data pipeline", "ETL", "analytics", "data model", "warehouse", "streaming"]
+    },
+    "ml_ai_engineer": {
+      "title": "ML/AI Engineer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["opus-4-6", "sonnet-5", "ai-platform-opus-5"],
+      "triggers": ["AI", "ML", "model", "embeddings", "RAG", "fine-tune", "LLM", "neural"]
+    },
+    "frontend_architect": {
+      "title": "Frontend Architect",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["frontend", "React", "components", "design system", "responsive", "CSS"]
+    },
+    "database_architect": {
+      "title": "Database Architect",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["schema", "database", "migration", "queries", "SQL", "indexing", "PostgreSQL"]
+    },
+    "performance_engineer": {
+      "title": "Performance Engineer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["performance", "load test", "latency", "scaling", "caching", "optimization"]
+    },
+    "ux_designer": {
+      "title": "UX Designer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["UX", "wireframe", "user flow", "design", "interface", "interaction", "accessibility"]
+    },
+    "ux_researcher": {
+      "title": "UX Researcher",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["user research", "interviews", "usability", "survey", "persona validation"]
+    },
+    "legal_compliance": {
+      "title": "Legal/Compliance Officer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["opus-4-6", "sonnet-5", "ai-platform-opus-5"],
+      "triggers": ["compliance", "GDPR", "legal", "privacy", "regulation", "HIPAA", "SOC2", "IP"]
+    },
+    "technical_writer": {
+      "title": "Technical Writer",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-4-6", "sonnet-5", "ai-platform-sonnet-4-6"],
+      "triggers": ["documentation", "docs", "API docs", "user guide", "README", "changelog"]
+    },
+    "customer_success": {
+      "title": "Customer Success Lead",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-4-6", "sonnet-5", "ai-platform-sonnet-4-6"],
+      "triggers": ["onboarding", "retention", "churn", "customer success", "support", "NPS"]
+    },
+    "competitive_intel": {
+      "title": "Competitive Intelligence Analyst",
+      "mode": "scout",
+      "tier": "execution",
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-sonnet-5"],
+      "triggers": ["competitor", "market analysis", "positioning", "benchmarking", "landscape"]
     },
     "research_analyst": {
       "title": "Research Analyst",
       "mode": "scout",
       "tier": "execution",
-      "model_priority": ["ai-platform-gemini-2-5-pro", "ai-platform-sonnet-5", "litellm-gemini-3-1"],
+      "model_priority": ["sonnet-5", "sonnet-4-6", "ai-platform-gemini-2-5-pro"],
       "triggers": ["research", "compare", "analyze", "investigate", "benchmark", "data"]
     }
   },
@@ -75,32 +166,52 @@
     "planning": {
       "keywords": ["plan", "strategy", "evaluate", "should we", "assess", "roadmap"],
       "default_roles": ["ceo", "cto", "vp_product"],
-      "optional_roles": ["cfo"]
+      "optional_roles": ["cfo", "program_manager"]
     },
     "build": {
       "keywords": ["build", "code", "implement", "create app", "develop", "scaffold"],
       "default_roles": ["cto", "vp_engineering", "senior_developer", "qa_engineer"],
-      "optional_roles": ["security_engineer"]
+      "optional_roles": ["devops_sre", "security_engineer", "database_architect"]
     },
     "research": {
       "keywords": ["research", "compare", "analyze", "investigate", "explore", "benchmark"],
       "default_roles": ["ceo", "research_analyst", "vp_product"],
-      "optional_roles": []
+      "optional_roles": ["competitive_intel"]
     },
     "gtm": {
       "keywords": ["launch", "go-to-market", "GTM", "marketing", "growth", "sell"],
       "default_roles": ["ceo", "vp_sales_marketing", "cfo", "research_analyst"],
-      "optional_roles": []
+      "optional_roles": ["customer_success", "competitive_intel"]
     },
     "security": {
       "keywords": ["security", "audit", "vulnerability", "threat model", "pen test"],
       "default_roles": ["cto", "security_engineer", "qa_engineer"],
-      "optional_roles": []
+      "optional_roles": ["legal_compliance"]
+    },
+    "data_ai": {
+      "keywords": ["AI", "ML", "data pipeline", "embeddings", "RAG", "model training"],
+      "default_roles": ["cto", "ml_ai_engineer", "data_engineer"],
+      "optional_roles": ["database_architect"]
+    },
+    "design": {
+      "keywords": ["UX", "design", "wireframe", "user flow", "interface", "prototype"],
+      "default_roles": ["vp_product", "ux_designer", "ux_researcher"],
+      "optional_roles": ["frontend_architect"]
+    },
+    "infrastructure": {
+      "keywords": ["deploy", "infrastructure", "CI/CD", "monitoring", "scaling", "cloud"],
+      "default_roles": ["cto", "devops_sre", "performance_engineer"],
+      "optional_roles": ["database_architect"]
+    },
+    "documentation": {
+      "keywords": ["docs", "documentation", "API docs", "user guide", "technical writing"],
+      "default_roles": ["technical_writer", "vp_product"],
+      "optional_roles": ["ux_designer"]
     },
     "full_org": {
       "keywords": ["full org", "army mode", "everything", "all roles", "complete"],
       "default_roles": ["ceo", "cto", "vp_engineering", "vp_product", "senior_developer", "qa_engineer", "research_analyst"],
-      "optional_roles": ["cfo", "vp_sales_marketing", "security_engineer"]
+      "optional_roles": ["cfo", "vp_sales_marketing", "security_engineer", "devops_sre", "ux_designer", "ml_ai_engineer", "program_manager", "legal_compliance", "technical_writer", "customer_success", "competitive_intel", "data_engineer", "frontend_architect", "database_architect", "performance_engineer", "ux_researcher"]
     }
   }
 }

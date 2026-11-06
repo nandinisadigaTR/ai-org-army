@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Org Army — Live Simulation</title>
+<style>
+:root{--bg:#0a0a0f;--s1:#12121a;--s2:#1a1a26;--b:#2a2a3a;--ac:#6c5ce7;--ac2:#a855f7;--cy:#06b6d4;--gn:#10b981;--or:#f59e0b;--rd:#ef4444;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t1);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+header{padding:12px 20px;background:var(--s1);border-bottom:1px solid var(--b);display:flex;align-items:center;gap:12px}
+header h1{font-size:1rem;font-weight:700;background:linear-gradient(135deg,#6c5ce7,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .status{margin-left:auto;font-size:.75rem;color:var(--t3)}
+header .status.active{color:var(--gn)}
+
+.main{flex:1;display:flex;overflow:hidden}
+
+/* ORG PANEL */
+.org-panel{width:220px;background:var(--s1);border-right:1px solid var(--b);padding:12px;overflow-y:auto;flex-shrink:0}
+.org-panel h3{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin:12px 0 6px;display:flex;align-items:center;gap:6px}
+.org-panel h3:first-child{margin-top:0}
+.tier-dot{width:8px;height:8px;border-radius:50%}
+.tier-dot.s{background:var(--ac2)}
+.tier-dot.m{background:var(--cy)}
+.tier-dot.e{background:var(--gn)}
+.agent{padding:8px 10px;border-radius:6px;font-size:.78rem;color:var(--t3);margin-bottom:3px;display:flex;align-items:center;gap:8px;transition:all .3s;cursor:default;position:relative}
+.agent .dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .3s}
+.agent.active{background:rgba(16,185,129,.08);color:var(--gn)}
+.agent.active .dot{background:var(--gn);box-shadow:0 0 8px var(--gn)}
+.agent.thinking{background:rgba(245,158,11,.08);color:var(--or)}
+.agent.thinking .dot{background:var(--or);animation:pulse-dot .8s infinite}
+.agent.done{color:var(--t2)}
+.agent.done .dot{background:var(--cy)}
+.agent .arrow{position:absolute;right:8px;font-size:.6rem;opacity:0;transition:opacity .3s}
+.agent.active .arrow,.agent.thinking .arrow{opacity:1}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* CHAT */
+.chat{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+
+.msg{animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.msg-user{align-self:flex-end;max-width:70%}
+.msg-user .bubble{background:var(--ac);color:white;border-radius:14px 14px 4px 14px;padding:10px 16px;font-size:.88rem}
+
+.msg-system{align-self:center;max-width:80%}
+.msg-system .bubble{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 16px;font-size:.78rem;color:var(--t3);text-align:center}
+
+.msg-agent{align-self:flex-start;max-width:85%}
+.msg-agent .role-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:.68rem;font-weight:700;margin-bottom:4px;letter-spacing:.5px}
+.msg-agent .bubble{background:var(--s1);border:1px solid var(--b);border-radius:4px 14px 14px 14px;padding:14px 18px;font-size:.85rem;line-height:1.7;color:var(--t2)}
+.msg-agent .bubble strong{color:var(--t1)}
+.msg-agent .bubble code{background:var(--s2);padding:1px 5px;border-radius:3px;font-size:.8rem;color:var(--cy);font-family:'Cascadia Code',monospace}
+.msg-agent .bubble ul{padding-left:18px;margin:6px 0}
+.msg-agent .bubble li{margin:3px 0}
+.msg-agent .bubble .handoff{margin-top:10px;padding:8px 12px;background:rgba(108,92,231,.06);border-left:2px solid var(--ac);border-radius:0 6px 6px 0;font-size:.78rem;color:var(--t3)}
+.msg-agent .bubble .handoff strong{color:var(--ac)}
+
+.tag-ceo{background:rgba(168,85,247,.15);color:var(--ac2)}
+.tag-cto{background:rgba(108,92,231,.15);color:var(--ac)}
+.tag-vpe{background:rgba(6,182,212,.15);color:var(--cy)}
+.tag-dev{background:rgba(16,185,129,.15);color:var(--gn)}
+.tag-qa{background:rgba(245,158,11,.15);color:var(--or)}
+.tag-devops{background:rgba(6,182,212,.15);color:var(--cy)}
+.tag-pm{background:rgba(168,85,247,.15);color:var(--ac2)}
+.tag-system{background:rgba(100,116,139,.15);color:var(--t3)}
+
+.typing-indicator{display:flex;gap:4px;padding:6px 0}
+.typing-indicator span{width:5px;height:5px;background:var(--t3);border-radius:50%;animation:bounce .5s infinite alternate}
+.typing-indicator span:nth-child(2){animation-delay:.15s}
+.typing-indicator span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{to{transform:translateY(-5px)}}
+
+.input-area{padding:12px 20px;background:var(--s1);border-top:1px solid var(--b);display:flex;gap:10px}
+.input-area input{flex:1;padding:11px 16px;background:var(--s2);border:1px solid var(--b);border-radius:10px;color:var(--t1);font-size:.88rem;outline:none;transition:border .2s}
+.input-area input:focus{border-color:var(--ac)}
+.input-area input::placeholder{color:var(--t3)}
+.input-area button{padding:11px 22px;background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;border-radius:10px;color:white;font-weight:700;font-size:.82rem;cursor:pointer;transition:transform .1s,opacity .2s}
+.input-area button:hover{transform:scale(1.02)}
+.input-area button:disabled{opacity:.5;cursor:default;transform:none}
+
+.examples{padding:16px 20px;display:flex;gap:8px;flex-wrap:wrap}
+.ex-btn{padding:8px 14px;background:var(--s2);border:1px solid var(--b);border-radius:8px;color:var(--t2);font-size:.78rem;cursor:pointer;transition:all .2s}
+.ex-btn:hover{border-color:var(--ac);color:var(--t1)}
+@media(max-width:768px){.org-panel{display:none}.msg-agent,.msg-user{max-width:95%}}
+</style>
+</head>
+<body>
+
+<header>
+<h1>AI-Org Army</h1>
+<div class="status" id="headerStatus">Ready — ask a question</div>
+</header>
+
+<div class="main">
+<div class="org-panel">
+<h3><span class="tier-dot s"></span> Strategic</h3>
+<div class="agent" id="a-ceo"><span class="dot"></span>CEO Strategist<span class="arrow">◂</span></div>
+<div class="agent" id="a-cto"><span class="dot"></span>CTO Architect<span class="arrow">◂</span></div>
+<div class="agent" id="a-cfo"><span class="dot"></span>CFO Analyst<span class="arrow">◂</span></div>
+
+<h3><span class="tier-dot m"></span> Management</h3>
+<div class="agent" id="a-vpe"><span class="dot"></span>VP Engineering<span class="arrow">◂</span></div>
+<div class="agent" id="a-vpp"><span class="dot"></span>VP Product<span class="arrow">◂</span></div>
+<div class="agent" id="a-vps"><span class="dot"></span>VP Sales & Mktg<span class="arrow">◂</span></div>
+<div class="agent" id="a-pm"><span class="dot"></span>Program Manager<span class="arrow">◂</span></div>
+
+<h3><span class="tier-dot e"></span> Execution</h3>
+<div class="agent" id="a-dev"><span class="dot"></span>Senior Developer<span class="arrow">◂</span></div>
+<div class="agent" id="a-qa"><span class="dot"></span>QA Engineer<span class="arrow">◂</span></div>
+<div class="agent" id="a-sec"><span class="dot"></span>Security Engineer<span class="arrow">◂</span></div>
+<div class="agent" id="a-devops"><span class="dot"></span>DevOps/SRE<span class="arrow">◂</span></div>
+<div class="agent" id="a-data"><span class="dot"></span>Data Engineer<span class="arrow">◂</span></div>
+<div class="agent" id="a-ml"><span class="dot"></span>ML/AI Engineer<span class="arrow">◂</span></div>
+<div class="agent" id="a-fe"><span class="dot"></span>Frontend Architect<span class="arrow">◂</span></div>
+<div class="agent" id="a-db"><span class="dot"></span>Database Architect<span class="arrow">◂</span></div>
+<div class="agent" id="a-perf"><span class="dot"></span>Performance Eng<span class="arrow">◂</span></div>
+<div class="agent" id="a-ux"><span class="dot"></span>UX Designer<span class="arrow">◂</span></div>
+<div class="agent" id="a-legal"><span class="dot"></span>Legal/Compliance<span class="arrow">◂</span></div>
+<div class="agent" id="a-tw"><span class="dot"></span>Technical Writer<span class="arrow">◂</span></div>
+<div class="agent" id="a-res"><span class="dot"></span>Research Analyst<span class="arrow">◂</span></div>
+</div>
+
+<div class="chat">
+<div class="messages" id="messages"></div>
+<div class="examples" id="examples">
+<button class="ex-btn" onclick="ask(this.textContent)">We need to build an AI chatbot for customer support</button>
+<button class="ex-btn" onclick="ask(this.textContent)">Should we migrate from monolith to microservices?</button>
+<button class="ex-btn" onclick="ask(this.textContent)">Build a mobile app for food delivery with payments</button>
+<button class="ex-btn" onclick="ask(this.textContent)">Our API is slow under load, fix it</button>
+<button class="ex-btn" onclick="ask(this.textContent)">Launch a B2B analytics dashboard product</button>
+</div>
+<div class="input-area">
+<input type="text" id="input" placeholder="Ask anything — watch the org respond..." onkeydown="if(event.key==='Enter'&&!running)ask(this.value)">
+<button id="sendBtn" onclick="ask(document.getElementById('input').value)">Send</button>
+</div>
+</div>
+</div>
+
+<script>
+let running=false;
+const scenarios={
+"ai_chatbot":{
+detect:q=>/chatbot|customer support|ai.*support|support.*ai|conversational/i.test(q),
+agents:["ceo","cto","vpp","ml","dev","qa"],
+flow:[
+{agent:"ceo",tag:"tag-ceo",role:"CEO Strategist",delay:1200,text:`<strong>Strategic Assessment</strong><br><br>This is a high-impact project. AI-powered customer support is now table stakes — 67% of consumers prefer self-service over speaking to a representative.<br><br><strong>Success criteria:</strong><ul><li>60%+ of support tickets resolved without human escalation</li><li>Customer satisfaction (CSAT) ≥ 4.2/5 on AI-handled interactions</li><li>Average resolution time < 2 minutes for common queries</li><li>20% reduction in support team costs within 6 months</li></ul><strong>GO recommendation.</strong> The ROI is clear — a single support agent costs $35-50K/year. If the chatbot handles 60% of volume, it pays for itself in 3 months.<div class="handoff"><strong>→ Handing off to CTO:</strong> Need architecture recommendation. Key question: build custom RAG pipeline or use a managed platform (Intercom Fin, Zendesk AI)?</div>`},
+{agent:"cto",tag:"tag-cto",role:"CTO Architect",delay:2000,text:`<strong>Architecture Decision: Custom RAG Pipeline</strong><br><br>Build custom, don't buy managed. Here's why: managed solutions (Intercom Fin, Zendesk AI) cap out at generic responses. A custom RAG pipeline lets you index your actual knowledge base, support history, and product docs.<br><br><strong>Stack:</strong><ul><li><code>Next.js</code> — chat widget frontend</li><li><code>Node.js + Fastify</code> — API layer</li><li><code>PostgreSQL + pgvector</code> — knowledge base with vector search</li><li><code>OpenAI text-embedding-3-large</code> — document embeddings</li><li><code>Claude/GPT-4</code> via internal AI gateway — response generation</li><li><code>Redis</code> — conversation session state</li></ul><strong>Key pattern:</strong> Hybrid retrieval (BM25 + vector search with RRF fusion) — same approach we validated in the knowledge management project. Pure vector search fails on product names and error codes.<div class="handoff"><strong>→ Handing off to VP Product:</strong> Need user stories and scope boundary. What's MVP vs V2?</div>`},
+{agent:"vpp",tag:"tag-vpe",role:"VP Product",delay:1800,text:`<strong>MVP Scope (ship in 6 weeks)</strong><br><br><strong>Must have:</strong><ul><li>Chat widget embeddable on website/app</li><li>RAG-powered answers from knowledge base</li><li>Graceful handoff to human agent when confidence is low</li><li>Conversation history per user</li></ul><strong>Should have (V1.1):</strong><ul><li>Multi-language support</li><li>Suggested follow-up questions</li><li>Agent dashboard showing AI performance metrics</li></ul><strong>Won't (V1):</strong> Voice support, proactive outreach, Slack/Teams integration<div class="handoff"><strong>→ Handing off to ML/AI Engineer:</strong> Need RAG architecture — chunking strategy, retrieval pipeline, confidence scoring for human handoff.</div>`},
+{agent:"ml",tag:"tag-dev",role:"ML/AI Engineer",delay:2200,text:`<strong>RAG Architecture</strong><br><br><strong>Retrieval pipeline:</strong><ol><li>User query → embed with <code>text-embedding-3-large</code></li><li>Hybrid search: pgvector (semantic) + tsvector (BM25), fused via RRF</li><li>Top 5 chunks → rerank with <code>cohere-rerank-v3</code></li><li>Top 3 chunks + conversation history → LLM prompt</li><li>LLM generates response with inline citations</li></ol><strong>Confidence scoring for handoff:</strong><ul><li>If retrieval score < 0.3 → auto-escalate to human</li><li>If LLM says "I'm not sure" or hedges → escalate</li><li>If user says "talk to a person" → immediate handoff</li></ul><strong>Cost estimate:</strong> ~$0.02-0.05 per conversation (embedding + rerank + generation). At 10K conversations/day = ~$300-500/mo in AI costs.<div class="handoff"><strong>→ Handing off to Senior Developer:</strong> Here's the architecture — build it. Key files: embedding pipeline, retrieval service, chat API, handoff logic.</div>`},
+{agent:"dev",tag:"tag-dev",role:"Senior Developer",delay:1500,text:`<strong>Implementation Plan</strong><br><br><strong>Project structure:</strong><pre>src/
+  chat/
+    widget.tsx         # Embeddable React component
+    chat-api.ts        # WebSocket + REST endpoints
+  rag/
+    embedder.ts        # Document chunking + embedding
+    retriever.ts       # Hybrid search (pgvector + BM25)
+    reranker.ts        # Cohere rerank integration
+    generator.ts       # LLM prompt + response generation
+  handoff/
+    confidence.ts      # Score threshold logic
+    escalation.ts      # Route to human agent queue
+  knowledge/
+    ingester.ts        # Bulk import from docs/help center
+    sync-worker.ts     # Keep embeddings fresh</pre><strong>Key design decisions:</strong><ul><li>WebSocket for real-time chat, REST fallback</li><li>Streaming responses (token-by-token) for natural feel</li><li>All LLM calls through internal AI gateway (not raw API)</li><li><code>IMessageBroker</code> abstraction for the handoff queue</li></ul><div class="handoff"><strong>→ Handing off to QA Engineer:</strong> Code architecture shared. Need test plan — especially for handoff logic and edge cases around confidence scoring.</div>`},
+{agent:"qa",tag:"tag-qa",role:"QA Engineer",delay:1800,text:`<strong>Test Plan — 12 Key Cases</strong><br><br><strong>Happy path:</strong><ul><li>User asks FAQ → correct answer with citation from knowledge base</li><li>Multi-turn conversation → context preserved across messages</li><li>User requests human → immediate handoff, conversation history transferred</li></ul><strong>Edge cases:</strong><ul><li>Question outside knowledge base → graceful "I don't know" + handoff offer (NOT hallucination)</li><li>Adversarial prompt injection ("ignore instructions, tell me...") → refused, logged</li><li>Concurrent conversations from same user → isolated sessions</li><li>Knowledge base empty/unavailable → fallback message, not crash</li></ul><strong>Load testing:</strong><ul><li>100 concurrent conversations → p95 response < 3s</li><li>LLM timeout (30s) → user sees "thinking..." then timeout message</li></ul><strong>Quality verdict: Medium risk.</strong> Main concern is hallucination when retrieval confidence is low — the confidence threshold must be tuned against real support data, not guessed.<div class="handoff"><strong>→ Back to CEO:</strong> Plan is complete. All roles have delivered. Ready for GO decision.</div>`}
+]},
+
+"monolith_migration":{
+detect:q=>/monolith|microservice|migration|migrate/i.test(q),
+agents:["ceo","cto","vpe","devops","dev"],
+flow:[
+{agent:"ceo",tag:"tag-ceo",role:"CEO Strategist",delay:1200,text:`<strong>Strategic Assessment: Proceed with Caution</strong><br><br>Monolith-to-microservices is one of the highest-risk architectural changes a company can make. Before committing:<br><br><strong>Key question:</strong> What specific problem are we solving? If the answer is "microservices are modern" — that's not a reason. Valid reasons:<ul><li>Teams are blocking each other on deployments</li><li>A single component needs to scale independently</li><li>Different parts need different tech stacks</li></ul><strong>My recommendation:</strong> Don't go full microservices. Extract 2-3 bounded contexts that cause the most pain. Keep everything else as a well-structured monolith.<div class="handoff"><strong>→ Handing off to CTO:</strong> What's the right decomposition strategy? Which services should be extracted first?</div>`},
+{agent:"cto",tag:"tag-cto",role:"CTO Architect",delay:2000,text:`<strong>Strangler Fig Pattern — Not Big Bang</strong><br><br>CEO is right — don't rewrite everything. Use the <strong>Strangler Fig pattern</strong>: incrementally replace pieces of the monolith while keeping it running.<br><br><strong>Extract in this order:</strong><ol><li><strong>Auth service</strong> — every other service needs it, extract first to establish the pattern (API gateway, service mesh, auth token propagation)</li><li><strong>Notification service</strong> — high fan-out, needs independent scaling, well-bounded</li><li><strong>Payment/billing</strong> — compliance requirements drive independent deployment</li></ol><strong>Keep as monolith:</strong> Core business logic, admin panel, reporting — not worth the distributed systems complexity.<br><br><strong>Infrastructure pattern:</strong> API Gateway (Kong/AWS ALB) routes traffic. New services get traffic incrementally. Old monolith code stays live until the new service is proven.<div class="handoff"><strong>→ Handing off to VP Engineering:</strong> Need a phased migration plan. Which team works on what, in what order?</div>`},
+{agent:"vpe",tag:"tag-vpe",role:"VP Engineering",delay:1800,text:`<strong>Phased Migration — 3 Quarters</strong><br><br><strong>Q1: Foundation + Auth Service</strong><ul><li>Set up API Gateway, service mesh (Istio/Linkerd), CI/CD per service</li><li>Extract auth service behind feature flag</li><li>Run dual-write: monolith + new service in parallel</li><li>Validate with 10% traffic, then 100%</li></ul><strong>Q2: Notification Service</strong><ul><li>Apply the pattern established in Q1</li><li>New team owns notification service end-to-end</li><li>Independent deploy cadence (daily vs monolith's weekly)</li></ul><strong>Q3: Payment Service + Cleanup</strong><ul><li>Extract payment with compliance review</li><li>Remove dead code from monolith</li><li>Document the architecture decision records</li></ul><strong>Team allocation:</strong> 2-person "extraction squad" + 1 DevOps. Rest of team continues feature work on monolith. Do NOT freeze feature development during migration.<div class="handoff"><strong>→ Handing off to DevOps:</strong> Need the infrastructure plan — how do we run monolith + microservices side by side?</div>`},
+{agent:"devops",tag:"tag-devops",role:"DevOps/SRE Engineer",delay:1800,text:`<strong>Infrastructure for Hybrid Monolith + Services</strong><br><br><strong>API Gateway:</strong> AWS ALB with path-based routing<ul><li><code>/api/auth/*</code> → auth service (EKS)</li><li><code>/api/notifications/*</code> → notification service (EKS)</li><li><code>/*</code> → monolith (existing EC2/ECS)</li></ul><strong>Service mesh:</strong> Start simple — no Istio yet. Use ALB + CloudMap for service discovery. Add mesh only when you have 5+ services.<br><br><strong>CI/CD:</strong> Each extracted service gets its own pipeline (GitHub Actions → ECR → ArgoCD). Monolith keeps its existing pipeline.<br><br><strong>Monitoring:</strong> Distributed tracing is non-negotiable — install OpenTelemetry from day 1. Without it, debugging cross-service issues is impossible.<br><br><strong>Cost impact:</strong> Running both systems in parallel adds ~30% infra cost during migration. Budget for 2-3 quarters of overlap.<div class="handoff"><strong>→ Handing off to Senior Developer:</strong> Here's the infra pattern. Start with the auth service extraction — set up the repo, define the API contract, implement the strangler proxy.</div>`},
+{agent:"dev",tag:"tag-dev",role:"Senior Developer",delay:1500,text:`<strong>Auth Service Extraction — First Move</strong><br><br><strong>Step 1:</strong> Define the API contract (OpenAPI spec) for auth — login, logout, token refresh, validate token, user profile.<br><br><strong>Step 2:</strong> Build the new auth service as a standalone Fastify app. Same database initially (shared PostgreSQL) — separate database is a V2 concern.<br><br><strong>Step 3:</strong> Strangler proxy in the monolith:<pre>// In monolith's auth routes:
+if (featureFlag('use-auth-service')) {
+  return proxy(req, 'http://auth-service:3000');
+} else {
+  return existingAuthHandler(req);
+}</pre><strong>Step 4:</strong> Dual-write validation — both paths run in parallel, compare responses, log discrepancies. Only switch traffic when discrepancy rate = 0%.<br><br><strong>Step 5:</strong> Once proven, remove the feature flag and the old code. The monolith is now smaller.<br><br><strong>Key risk:</strong> Shared database. Both monolith and auth service read/write the users table. Coordinate schema changes carefully — this is the #1 source of migration bugs.`}
+]},
+
+"food_delivery":{
+detect:q=>/food.*delivery|delivery.*app|mobile.*app.*food|payment/i.test(q),
+agents:["ceo","cto","vpp","dev","devops","qa"],
+flow:[
+{agent:"ceo",tag:"tag-ceo",role:"CEO Strategist",delay:1200,text:`<strong>Market Reality Check</strong><br><br>Food delivery is a <strong>brutally competitive</strong> market — Uber Eats, DoorDash, Grubhub, and hundreds of regional players. Entering head-on is suicide.<br><br><strong>Viable angles:</strong><ul><li><strong>Niche:</strong> Corporate catering, campus delivery, or a specific cuisine vertical</li><li><strong>White-label:</strong> Build the platform for restaurants who want their own delivery app (avoiding aggregator fees)</li><li><strong>Geography:</strong> Underserved tier-2/tier-3 cities</li></ul><strong>Before building anything:</strong> validate demand with 50 restaurant interviews. If restaurants won't commit to a pilot, the app doesn't matter.<div class="handoff"><strong>→ Handing off to CTO:</strong> Assuming we proceed — what's the minimum architecture for a food delivery app with real-time tracking and payments?</div>`},
+{agent:"cto",tag:"tag-cto",role:"CTO Architect",delay:2000,text:`<strong>Architecture: 4 Core Services</strong><br><br><pre>┌─────────┐  ┌──────────┐  ┌─────────────┐  ┌──────────┐
+│ Customer │  │Restaurant│  │   Delivery   │  │  Admin   │
+│   App    │  │  Portal  │  │  Driver App  │  │Dashboard │
+└────┬─────┘  └────┬─────┘  └──────┬───────┘  └────┬─────┘
+     │             │               │               │
+     └─────────────┴───────┬───────┴───────────────┘
+                    ┌──────▼──────┐
+                    │  API Gateway │
+                    └──────┬──────┘
+           ┌───────────────┼───────────────┐
+     ┌─────▼─────┐  ┌─────▼─────┐  ┌──────▼──────┐
+     │   Order    │  │  Payment  │  │  Tracking   │
+     │  Service   │  │  Service  │  │  Service    │
+     └───────────┘  └───────────┘  └─────────────┘</pre><strong>Stack:</strong><ul><li><strong>Mobile:</strong> React Native (one codebase, iOS + Android)</li><li><strong>Backend:</strong> Node.js + TypeScript + Fastify</li><li><strong>Database:</strong> PostgreSQL (orders, users) + Redis (real-time state)</li><li><strong>Payments:</strong> Stripe Connect (marketplace model — split payments between platform and restaurant)</li><li><strong>Tracking:</strong> WebSockets for real-time driver location</li><li><strong>Maps:</strong> Google Maps Platform (routing, ETA, geocoding)</li></ul><div class="handoff"><strong>→ Handing off to VP Product:</strong> What's the MVP feature set? Be ruthless — what can we cut?</div>`},
+{agent:"vpp",tag:"tag-vpe",role:"VP Product",delay:1800,text:`<strong>MVP — Launch in 8 Weeks</strong><br><br><strong>Must (week 1-8):</strong><ul><li>Customer: browse restaurants, view menu, add to cart, checkout with Stripe</li><li>Restaurant: accept/reject orders, mark as ready</li><li>Driver: see available orders, accept, navigate, mark delivered</li><li>Real-time order status updates (placed → accepted → preparing → picked up → delivered)</li></ul><strong>Cut from MVP:</strong><ul><li>❌ Scheduling orders in advance</li><li>❌ Promo codes and discounts</li><li>❌ Ratings and reviews</li><li>❌ In-app chat between customer and driver</li><li>❌ Multiple payment methods (Stripe only)</li></ul>The MVP tests one thing: <strong>can we complete the order → payment → delivery loop end-to-end?</strong> Everything else is polish.<div class="handoff"><strong>→ Handing off to Senior Developer:</strong> Build the order flow. Payment via Stripe Connect. Real-time tracking via WebSockets.</div>`},
+{agent:"dev",tag:"tag-dev",role:"Senior Developer",delay:1500,text:`<strong>Order Flow Implementation</strong><br><br><strong>State machine:</strong><pre>PLACED → ACCEPTED → PREPARING → READY → PICKED_UP → DELIVERED
+  ↓         ↓
+CANCELLED  REJECTED</pre><strong>Payment (Stripe Connect):</strong><ul><li>Platform creates a PaymentIntent with <code>transfer_data</code></li><li>Customer pays platform</li><li>Platform auto-transfers restaurant's share (minus commission)</li><li>Driver payout via Stripe Connect Express accounts (weekly)</li></ul><strong>Real-time tracking:</strong><ul><li>Driver app sends GPS every 5 seconds via WebSocket</li><li>Server stores latest position in Redis (not PostgreSQL)</li><li>Customer app subscribes to order channel, receives position updates</li></ul><strong>Key risk:</strong> Payment splits are complex with tax implications. Use Stripe's built-in marketplace features — don't build payment splitting yourself.<div class="handoff"><strong>→ Handing off to QA:</strong> Test the full order lifecycle. Especially: payment failure mid-order, driver goes offline during delivery, restaurant rejects after payment captured.</div>`},
+{agent:"devops",tag:"tag-devops",role:"DevOps/SRE",delay:1500,text:`<strong>Infrastructure</strong><br><br>For MVP, keep it simple — don't over-engineer:<ul><li><strong>Backend:</strong> AWS ECS Fargate (no K8s overhead for a small team)</li><li><strong>Database:</strong> RDS PostgreSQL + ElastiCache Redis</li><li><strong>Mobile builds:</strong> Expo EAS (managed React Native builds)</li><li><strong>Monitoring:</strong> Sentry (errors) + PostHog (analytics) + CloudWatch (infra)</li></ul><strong>Cost estimate:</strong> ~$200-400/mo for MVP infrastructure. Scale concerns start at 1000+ concurrent orders.<div class="handoff"><strong>→ QA takes it from here for final review.</strong></div>`},
+{agent:"qa",tag:"tag-qa",role:"QA Engineer",delay:1800,text:`<strong>Critical Test Scenarios</strong><br><br><strong>Payment edge cases (HIGH priority):</strong><ul><li>Payment fails after order accepted → refund + notify restaurant to cancel</li><li>Customer requests cancel after driver picks up → who pays? (policy decision needed)</li><li>Stripe webhook arrives late → order state must handle eventual consistency</li></ul><strong>Delivery edge cases:</strong><ul><li>Driver goes offline mid-delivery → system reassigns after 5 min timeout</li><li>GPS signal lost → last known position shown, "location unavailable" after 60s</li><li>Two drivers accept same order (race condition) → optimistic lock on order assignment</li></ul><strong>Verdict: Medium-High risk.</strong> Payment + delivery state machine interactions are the hardest part. Get the state machine right and the rest follows.`}
+]},
+
+"api_performance":{
+detect:q=>/api.*slow|slow.*api|performance|load|latency|fix.*slow|speed/i.test(q),
+agents:["cto","perf","db","dev"],
+flow:[
+{agent:"cto",tag:"tag-cto",role:"CTO Architect",delay:1200,text:`<strong>First: Diagnose Before Prescribing</strong><br><br>Don't guess — measure. Before changing anything:<ol><li><strong>APM trace:</strong> Which endpoints are slow? P50/P95/P99 latency by route</li><li><strong>Database:</strong> Slow query log — are we missing indexes? N+1 queries?</li><li><strong>External calls:</strong> Are we waiting on third-party APIs synchronously?</li><li><strong>Memory/CPU:</strong> Are we compute-bound or I/O-bound?</li></ol>80% of API performance problems are database problems. Let's start there.<div class="handoff"><strong>→ Handing off to Performance Engineer:</strong> Profile the system. Where's the bottleneck?</div>`},
+{agent:"perf",tag:"tag-devops",role:"Performance Engineer",delay:2000,text:`<strong>Bottleneck Analysis (Typical Findings)</strong><br><br><strong>Most likely culprits in order:</strong><table><tr><th>#</th><th>Issue</th><th>Fix</th><th>Impact</th></tr><tr><td>1</td><td>Missing database indexes</td><td>Add composite indexes for common queries</td><td>10-100x improvement</td></tr><tr><td>2</td><td>N+1 query patterns</td><td>Use eager loading / JOIN / DataLoader</td><td>5-50x improvement</td></tr><tr><td>3</td><td>No caching</td><td>Redis cache for hot data (user profiles, configs)</td><td>2-10x improvement</td></tr><tr><td>4</td><td>Synchronous external API calls</td><td>Make async, add timeouts, circuit breakers</td><td>2-5x improvement</td></tr><tr><td>5</td><td>No connection pooling</td><td>PgBouncer or built-in pool (max 20-50 connections)</td><td>2-3x improvement</td></tr></table><br><strong>Performance targets:</strong> API p95 < 200ms, p99 < 500ms. Database queries p95 < 50ms.<div class="handoff"><strong>→ Handing off to Database Architect:</strong> Deep-dive on the database layer. Which queries need optimization?</div>`},
+{agent:"db",tag:"tag-cy",role:"Database Architect",delay:1800,text:`<strong>Database Optimization Playbook</strong><br><br><strong>Step 1: Find slow queries</strong><pre>-- PostgreSQL: enable slow query logging
+ALTER SYSTEM SET log_min_duration_statement = 100; -- log queries > 100ms
+SELECT pg_reload_conf();</pre><strong>Step 2: Add missing indexes</strong><pre>-- Example: if you filter by user_id + status often:
+CREATE INDEX CONCURRENTLY idx_orders_user_status 
+  ON orders(user_id, status, created_at DESC);
+
+-- Covering index to avoid table lookups:
+CREATE INDEX CONCURRENTLY idx_orders_covering 
+  ON orders(user_id, status) INCLUDE (total, created_at);</pre><strong>Step 3: Fix N+1 patterns</strong><br>If your ORM loads related data in loops, switch to batch loading or JOINs.<br><br><strong>Step 4: Connection pooling</strong><br>Each Node.js instance should use 10-20 connections max. Use PgBouncer in transaction mode if you have many app instances.<div class="handoff"><strong>→ Handing off to Senior Developer:</strong> Here are the specific fixes. Implement, measure, repeat.</div>`},
+{agent:"dev",tag:"tag-dev",role:"Senior Developer",delay:1500,text:`<strong>Implementation — Quick Wins First</strong><br><br><strong>Day 1 (indexes):</strong><ul><li>Run <code>EXPLAIN ANALYZE</code> on the top 10 slowest queries</li><li>Add indexes identified by DB Architect</li><li>Use <code>CREATE INDEX CONCURRENTLY</code> — doesn't lock the table</li></ul><strong>Day 2-3 (caching):</strong><pre>// Redis cache with 5-min TTL for user profiles
+const user = await cache.getOrSet(
+  \`user:\${userId}\`, 
+  () => db.users.findById(userId),
+  { ttl: 300 }
+);</pre><strong>Day 3-4 (N+1 fixes):</strong><ul><li>Replace ORM lazy loading with explicit <code>include</code> / <code>JOIN</code></li><li>Add DataLoader for GraphQL resolvers if applicable</li></ul><strong>Day 5 (measure):</strong><ul><li>Compare p95/p99 before and after</li><li>Expected: 3-10x improvement from indexes + caching alone</li></ul><strong>If still slow after all this:</strong> the problem is architectural (synchronous external calls, wrong database for the workload, or you've outgrown a single database). That's a bigger conversation with the CTO.`}
+]},
+
+"analytics_dashboard":{
+detect:q=>/analytics|dashboard|b2b|launch.*product|saas.*product/i.test(q),
+agents:["ceo","cto","vpp","vps","cfo"],
+flow:[
+{agent:"ceo",tag:"tag-ceo",role:"CEO Strategist",delay:1200,text:`<strong>Strategic Assessment: B2B Analytics Dashboard</strong><br><br>The analytics/BI market is massive (~$30B in 2026) but dominated by Tableau, Looker, PowerBI, and Metabase. Entering without a clear wedge is a losing move.<br><br><strong>Viable differentiation angles:</strong><ul><li><strong>Vertical-specific:</strong> Analytics for a specific industry (ecommerce, healthcare, SaaS metrics)</li><li><strong>Embedded analytics:</strong> White-label dashboard that other SaaS products embed in their UI</li><li><strong>AI-native:</strong> Natural language queries instead of SQL/drag-drop builders</li></ul><strong>My recommendation:</strong> Go embedded analytics — it's a platform play, not a product play. Companies pay $50-200K/year to embed Looker. Build the alternative at 1/10th the price.<div class="handoff"><strong>→ Handing off to VP Sales & Marketing:</strong> How do we position and sell this? What's the GTM?</div>`},
+{agent:"vps",tag:"tag-pm",role:"VP Sales & Marketing",delay:1800,text:`<strong>Go-to-Market: Embedded Analytics</strong><br><br><strong>Positioning:</strong> "Add analytics to your SaaS product in a weekend, not a quarter."<br><br><strong>Target:</strong> B2B SaaS companies (Series A-C) who need to add dashboards/reporting to their product but don't want to build from scratch.<br><br><strong>Pricing:</strong><ul><li><strong>Starter:</strong> $299/mo — 5 dashboards, 10K monthly active users</li><li><strong>Growth:</strong> $999/mo — unlimited dashboards, 100K MAU, white-label</li><li><strong>Enterprise:</strong> Custom — SSO, dedicated support, SLA</li></ul><strong>First 100 customers:</strong><ul><li>Launch on Product Hunt + Hacker News (developer audience)</li><li>Content: "How to add analytics to your SaaS in 30 minutes" tutorial</li><li>Partner with SaaS boilerplate projects (create-t3-app, etc.)</li><li>Offer 3-month free pilot to 10 design partners</li></ul><div class="handoff"><strong>→ Handing off to CFO:</strong> Does the unit economics work at these price points?</div>`},
+{agent:"cfo",tag:"tag-ceo",role:"CFO Analyst",delay:1500,text:`<strong>Unit Economics</strong><br><br><table><tr><th>Metric</th><th>Target</th></tr><tr><td>Average contract value (ACV)</td><td>$6,000/yr (Growth plan)</td></tr><tr><td>Customer acquisition cost (CAC)</td><td>$1,500 (content + PLG)</td></tr><tr><td>LTV:CAC ratio</td><td>4:1 (healthy)</td></tr><tr><td>Gross margin</td><td>80% (infra costs ~$50/customer/mo)</td></tr><tr><td>Break-even</td><td>~100 customers = $50K MRR</td></tr></table><br><strong>The math works</strong> if churn stays below 5%/mo. Embedded analytics is sticky — once a customer integrates your SDK, switching cost is high. That's the moat.<br><br><strong>Burn rate to break-even:</strong> 3-person team × 12 months × $15K/mo fully loaded = ~$540K. Achievable with a $750K pre-seed or bootstrapped with consulting revenue.<div class="handoff"><strong>→ Handing off to CTO:</strong> What's the architecture for an embeddable analytics platform?</div>`},
+{agent:"cto",tag:"tag-cto",role:"CTO Architect",delay:2000,text:`<strong>Architecture: Embeddable Analytics SDK</strong><br><br><strong>What we ship:</strong><ol><li><code>&lt;script&gt;</code> tag or React/Vue SDK that customers embed</li><li>Dashboard builder (drag-drop) in our admin portal</li><li>REST API for data ingestion + query</li></ol><strong>Stack:</strong><ul><li><strong>Frontend SDK:</strong> Web Components (framework-agnostic) wrapping D3/Recharts</li><li><strong>Dashboard builder:</strong> Next.js + react-grid-layout</li><li><strong>Query engine:</strong> DuckDB (embedded OLAP) for small datasets, ClickHouse for large</li><li><strong>Data ingestion:</strong> REST API + batch CSV/Parquet upload</li><li><strong>Multi-tenancy:</strong> Row-level security (each customer's end-users only see their data)</li></ul><strong>Key technical challenge:</strong> Iframe-based embedding (secure isolation) vs native SDK (better UX, harder security). Start with iframe + postMessage API. Migrate to Web Components in V2.<div class="handoff"><strong>→ Handing off to VP Product:</strong> Define the dashboard builder UX — what chart types, what customization, what's MVP?</div>`},
+{agent:"vpp",tag:"tag-vpe",role:"VP Product",delay:1500,text:`<strong>Dashboard Builder MVP</strong><br><br><strong>Chart types (MVP):</strong> Line, bar, pie, number card, table. That's it — covers 90% of use cases.<br><br><strong>Customization:</strong><ul><li>Drag-drop layout (grid-based)</li><li>Color theme (match customer's brand)</li><li>Date range filter (global)</li><li>CSV export</li></ul><strong>NOT in MVP:</strong> Custom SQL editor, drill-down, real-time streaming, scheduled email reports, mobile-responsive dashboards.<br><br><strong>Integration flow:</strong><pre>1. Customer signs up → gets API key
+2. Sends data via REST API
+3. Builds dashboard in our portal
+4. Copies embed code → pastes in their app
+5. Their users see the dashboard</pre><strong>Time to value target:</strong> 30 minutes from signup to working embedded dashboard. If it takes longer, we lose them.`}
+]}
+};
+
+function detectScenario(q){
+for(const[k,s]of Object.entries(scenarios)){
+if(s.detect(q))return s;
+}
+return null;
+}
+
+function fallbackScenario(q){
+return{agents:["ceo","cto","vpe"],flow:[
+{agent:"ceo",tag:"tag-ceo",role:"CEO Strategist",delay:1200,text:`<strong>Assessing: "${q}"</strong><br><br>Let me frame this strategically. The first question is: <strong>what problem are we actually solving, and for whom?</strong><br><br>Before committing resources, I need to understand:<ul><li>Who is the target user?</li><li>What's the business impact if we succeed?</li><li>What's the cost of NOT doing this?</li></ul>Based on the question, this looks like a <strong>planning task</strong>. I'm routing it to the CTO for technical feasibility and VP Engineering for execution planning.<div class="handoff"><strong>→ Handing off to CTO:</strong> Evaluate technical approach and feasibility.</div>`},
+{agent:"cto",tag:"tag-cto",role:"CTO Architect",delay:1800,text:`<strong>Technical Assessment</strong><br><br>Taking the CEO's framing and evaluating the technical path. Key considerations:<ul><li><strong>Build vs Buy:</strong> Is there an existing solution that covers 80%+ of the need?</li><li><strong>Complexity:</strong> What's genuinely hard here vs what's well-understood?</li><li><strong>Stack alignment:</strong> Does this fit our existing infrastructure or require new capabilities?</li></ul>For a question like this, I'd want to research current best practices and what the industry standard approach is before committing to an architecture.<div class="handoff"><strong>→ Handing off to VP Engineering:</strong> Break this into executable tasks and estimate the effort.</div>`},
+{agent:"vpe",tag:"tag-vpe",role:"VP Engineering",delay:1500,text:`<strong>Execution Plan</strong><br><br>Based on the CTO's assessment, here's how I'd structure the work:<br><br><strong>Phase 1 (Discovery — 1 week):</strong><ul><li>Research existing solutions and approaches</li><li>Define technical requirements</li><li>Identify the biggest unknowns</li></ul><strong>Phase 2 (Prototype — 2 weeks):</strong><ul><li>Build the smallest thing that validates the approach</li><li>Test with real users/data</li></ul><strong>Phase 3 (Build — 4-6 weeks):</strong><ul><li>Full implementation based on prototype learnings</li><li>QA, security review, deployment</li></ul><br><em>This is the general framework. In the real ai-org skill, I'd dispatch the full team with your specific question and get detailed, researched answers from each role. Try asking something specific!</em>`}
+]};
+}
+
+function setAgentState(id,state){
+const el=document.getElementById('a-'+id);
+if(!el)return;
+el.className='agent';
+if(state)el.classList.add(state);
+}
+
+function resetAgents(){
+document.querySelectorAll('.agent').forEach(a=>{a.className='agent'});
+}
+
+function addMessage(type,content,roleTag,roleName){
+const d=document.getElementById('messages');
+const m=document.createElement('div');
+m.className='msg msg-'+type;
+if(type==='user'){
+m.innerHTML=`<div class="bubble">${content}</div>`;
+}else if(type==='system'){
+m.innerHTML=`<div class="bubble">${content}</div>`;
+}else{
+m.innerHTML=`<div class="role-tag ${roleTag}">${roleName}</div><div class="bubble">${content}</div>`;
+}
+d.appendChild(m);
+d.scrollTop=d.scrollHeight;
+}
+
+function addTyping(roleTag,roleName){
+const d=document.getElementById('messages');
+const m=document.createElement('div');
+m.className='msg msg-agent';m.id='typing-msg';
+m.innerHTML=`<div class="role-tag ${roleTag}">${roleName}</div><div class="bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+d.appendChild(m);d.scrollTop=d.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typing-msg');if(t)t.remove();}
+
+async function ask(q){
+q=q.trim();if(!q||running)return;
+running=true;
+document.getElementById('input').value='';
+document.getElementById('sendBtn').disabled=true;
+document.getElementById('examples').style.display='none';
+document.getElementById('headerStatus').textContent='Processing...';
+document.getElementById('headerStatus').className='status active';
+resetAgents();
+
+addMessage('user',q);
+
+const scenario=detectScenario(q)||fallbackScenario(q);
+
+await sleep(500);
+const agentNames=scenario.agents.map(a=>{
+const el=document.getElementById('a-'+a);
+return el?el.textContent.replace('◂','').trim():'';
+}).filter(Boolean).join(', ');
+addMessage('system',`Routing to: ${agentNames}`);
+
+for(const step of scenario.flow){
+setAgentState(step.agent,'thinking');
+document.getElementById('headerStatus').textContent=`${step.role} is thinking...`;
+addTyping(step.tag,step.role);
+await sleep(step.delay);
+removeTyping();
+setAgentState(step.agent,'active');
+addMessage('agent',step.text,step.tag,step.role);
+await sleep(400);
+setAgentState(step.agent,'done');
+}
+
+document.getElementById('headerStatus').textContent='Complete — all agents delivered';
+document.getElementById('headerStatus').className='status active';
+await sleep(2000);
+document.getElementById('headerStatus').textContent='Ready — ask another question';
+document.getElementById('headerStatus').className='status';
+running=false;
+document.getElementById('sendBtn').disabled=false;
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+</script>
+</body>
+</html>
